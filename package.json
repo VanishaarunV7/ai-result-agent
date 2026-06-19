@@ -1,0 +1,22 @@
+{
+  "name": "ai-result-agent",
+  "version": "1.0.0",
+  "description": "This is a Node.js API built with Express and Mongoose to track student results, analyze their performance by topics and outcomes, and provide insights.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "seed": "node seed/seedData.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "groq-sdk": "^1.2.1",
+    "mongoose": "^9.7.1"
+  }
+}
