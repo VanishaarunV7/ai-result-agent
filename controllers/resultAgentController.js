@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const StudentAnswer = require('../models/studentAnswer');
+const Conversation = require('../models/conversation');
 const Groq = require('groq-sdk');
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -91,86 +92,96 @@ exports.overallSummary = async (req, res) => {
 
 exports.chat = async (req, res) => {
   try {
-    const { studentId, question } = req.body;
+    const { studentId, question, conversationId } = req.body;
     if (!studentId || !question) return res.status(400).json({ error: 'studentId and question required' });
 
     const answers = await StudentAnswer.find({ studentId });
     const attempts = await getRawAttempts(studentId);
 
     if (!answers.length || !attempts.length) {
-      return res.json({ answer: 'No exam data found for this student.', weakTopics: [], weakOutcomes: [] });
+      return res.json({ answer: 'No exam data found for this student.' });
     }
 
     const { topicResults, outcomeResults } = calculatePerformance(answers);
-
-    // ── Get exam names directly from raw DB ──
     const examNames = attempts.map(a => a.examName).filter(Boolean);
 
-    console.log('DEBUG examNames:', examNames); // verify in terminal
-
-    // ── Check unknown exam ──
-    const q = question.toLowerCase();
-    const unknownSubjects = ['physics', 'chemistry', 'maths', 'math', 'mathematics', 'biology', 'history', 'geography', 'science', 'economics', 'commerce', 'computer', 'tamil', 'hindi', 'french', 'accounts', 'accountancy'];
-    const knownLower = examNames.map(n => n.toLowerCase());
-
-    let askedUnknown = false;
-    for (const sub of unknownSubjects) {
-      if (q.includes(sub)) {
-        const isKnown = knownLower.some(k => k.includes(sub));
-        if (!isKnown) { askedUnknown = true; break; }
-      }
+    // Get or create conversation history
+    let conversation = null;
+    if (conversationId) {
+      conversation = await Conversation.findOne({ conversationId });
     }
-
-    if (askedUnknown) {
-      return res.json({
-        answer: `That exam has not been conducted. Only these exams are available: ${examNames.join(', ')}.`
+    
+    if (!conversation) {
+      conversation = new Conversation({
+        conversationId: `conv_${Date.now()}`,
+        studentId,
+        messages: []
       });
     }
-    // ── Build focused context for Groq ──
+
+    // Add user message
+    conversation.messages.push({
+      role: 'user',
+      content: question,
+      timestamp: new Date()
+    });
+
+    // Build focused context for Groq
     const sorted = [...attempts].sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
     const latest = sorted[0];
     const previous = sorted[1] || null;
 
     const examList = attempts.map(a => `- ${a.examName}: ${a.marksScored}/${a.totalMarks} = ${a.percentage}%`).join('\n');
     const topicList = topicResults.map(t => `- ${t.topic}: ${t.percentage}% (${t.level})`).join('\n');
-    const outcomeList = outcomeResults.map(o => `- ${o.outcome}: ${o.percentage}% (${o.level})`).join('\n');
     const improvement = previous
       ? `Latest: ${latest.examName} = ${latest.percentage}%. Previous: ${previous.examName} = ${previous.percentage}%.`
       : `Only one exam: ${latest.examName} = ${latest.percentage}%.`;
 
-    const prompt = `Student result data:
+    const chatContext = conversation.messages.map(m => 
+      `${m.role === 'user' ? 'Student' : 'Agent'}: ${m.content}`
+    ).join('\n');
 
+    const prompt = `Student result data:
 Exams attended:
 ${examList}
 
-Topics:
+Topics Performance:
 ${topicList}
-
-Outcomes:
-${outcomeList}
 
 Improvement: ${improvement}
 
-Question: "${question}"
+Previous conversation:
+${chatContext}
 
-Reply in 1-2 sentences only using the above data. Do not add any extra information not asked.`;
+Based on the conversation history and the student's result data, answer the student's latest question. Reply in 1-2 sentences only. Use only the provided data. Do not add any extra information not asked.`;
 
     const completion = await groq.chat.completions.create({
       messages: [
-        { role: 'system', content: 'Answer student exam questions in 1-2 sentences only. Use only given data. Never add extra.' },
+        { role: 'system', content: 'Answer student exam questions concisely based on the data provided.' },
         { role: 'user', content: prompt }
       ],
       model: 'llama-3.3-70b-versatile',
       temperature: 0.1,
-      max_tokens: 100
+      max_tokens: 150
     });
 
     const answer = completion.choices[0]?.message?.content || 'Could not generate response.';
+
+    // Add assistant message
+    conversation.messages.push({
+      role: 'assistant',
+      content: answer,
+      timestamp: new Date()
+    });
+
+    await conversation.save();
+
     res.json({
       answer,
+      conversationId: conversation.conversationId,
+      history: conversation.messages,
       weakTopics: topicResults.filter(t => t.percentage < 76).map(t => t.topic),
-      weakOutcomes: outcomeResults.filter(o => o.percentage < 76).map(o => o.outcome),
-      topicResults, outcomeResults
+      topicResults
     });
 
   } catch (e) {

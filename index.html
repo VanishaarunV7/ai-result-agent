@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>EduAgent — Student Result Assistant</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -24,6 +25,22 @@
       --user-bg:   #2d2060;
     }
 
+    [data-theme="light"] {
+      --bg:        #f8fafc;
+      --surface:   #ffffff;
+      --card:      #ffffff;
+      --border:    #e2e8f0;
+      --accent:    #4f46e5;
+      --accent2:   #818cf8;
+      --green:     #10b981;
+      --red:       #ef4444;
+      --yellow:    #f59e0b;
+      --text:      #0f172a;
+      --muted:     #64748b;
+      --bot-bg:    #f1f5f9;
+      --user-bg:   #e0e7ff;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
       background: var(--bg);
@@ -32,6 +49,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: background 0.3s, color 0.3s;
     }
 
     /* ── Header ── */
@@ -49,7 +67,7 @@
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
+      font-size: 18px; color: white;
     }
     .header-info h1 {
       font-family: 'Space Grotesk', sans-serif;
@@ -58,21 +76,28 @@
     }
     .header-info p { font-size: 12px; color: var(--muted); }
 
-    .status-dot {
+    .header-right {
       margin-left: auto;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .status-dot {
       display: flex; align-items: center; gap: 6px;
       font-size: 12px; color: var(--green);
     }
     .status-dot::before {
-      content: '';
-      width: 8px; height: 8px;
-      background: var(--green);
-      border-radius: 50%;
+      content: ''; width: 8px; height: 8px;
+      background: var(--green); border-radius: 50%;
       animation: pulse 2s infinite;
     }
-    @keyframes pulse {
-      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .theme-btn {
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); width: 32px; height: 32px; border-radius: 8px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
     }
+    .theme-btn:hover { border-color: var(--accent); }
 
     /* ── Student Selector ── */
     .student-bar {
@@ -84,198 +109,171 @@
     }
     .student-bar label { font-size: 12px; color: var(--muted); white-space: nowrap; }
     .student-bar select {
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      outline: none;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); padding: 6px 12px; border-radius: 8px;
+      font-size: 13px; cursor: pointer; outline: none;
     }
     .student-bar select:focus { border-color: var(--accent); }
 
-    .quick-btns {
-      display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto;
-    }
+    .quick-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
     .quick-btn {
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-size: 11px;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
+      background: var(--card); border: 1px solid var(--border); color: var(--text);
+      padding: 5px 12px; border-radius: 20px; font-size: 11px; cursor: pointer;
+      transition: all 0.2s; white-space: nowrap;
     }
     .quick-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent2);
-      background: rgba(108,99,255,0.1);
+      border-color: var(--accent); color: var(--accent2); background: rgba(108,99,255,0.1);
     }
 
-    /* ── Chat Area ── */
+    /* ── Main Layout ── */
+    .main-layout {
+      display: flex; flex: 1; overflow: hidden;
+    }
+
+    /* ── Dashboard Panel ── */
+    .dashboard-panel {
+      flex: 1; padding: 24px; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 24px;
+    }
+    .dashboard-panel::-webkit-scrollbar { width: 6px; }
+    .dashboard-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .dashboard-header-row { display: flex; gap: 24px; flex-wrap: wrap; }
+    
+    .profile-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; flex: 1; min-width: 250px; display: flex; align-items: center; gap: 20px;
+    }
+    .profile-avatar {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: white; flex-shrink: 0;
+    }
+    .profile-info h2 { font-size: 20px; margin-bottom: 4px; color: var(--text); }
+    .profile-info p { font-size: 13px; color: var(--muted); margin-bottom: 2px; }
+
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px; flex: 2; min-width: 300px;
+    }
+    .kpi-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; display: flex; flex-direction: column; justify-content: center;
+    }
+    .kpi-value { font-size: 24px; font-weight: 700; color: var(--accent); }
+    .kpi-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .alerts-container { display: flex; flex-direction: column; gap: 10px; }
+    .alert-banner {
+      padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .alert-banner.critical { background: rgba(248,113,113,0.1); border: 1px solid var(--red); color: var(--red); }
+    .alert-banner.weak { background: rgba(251,191,36,0.1); border: 1px solid var(--yellow); color: var(--yellow); }
+    .alert-banner.good { background: rgba(52,211,153,0.1); border: 1px solid var(--green); color: var(--green); }
+
+    .charts-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;
+    }
+    .chart-container {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; display: flex; flex-direction: column; align-items: center;
+      height: 320px;
+    }
+    .chart-container h3 {
+      font-size: 13px; color: var(--muted); margin-bottom: 16px; align-self: flex-start;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .chart-wrapper {
+      position: relative; width: 100%; height: 100%; flex: 1;
+    }
+
+    /* ── Chat Panel ── */
+    .chat-panel {
+      width: 400px; border-left: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface);
+    }
+    @media (max-width: 900px) {
+      .main-layout { flex-direction: column; }
+      .chat-panel { width: 100%; height: 500px; border-left: none; border-top: 1px solid var(--border); }
+    }
+
     #chat {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      scroll-behavior: smooth;
+      flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth;
     }
     #chat::-webkit-scrollbar { width: 4px; }
-    #chat::-webkit-scrollbar-track { background: transparent; }
     #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-    /* ── Messages ── */
-    .msg { display: flex; gap: 10px; max-width: 75%; animation: fadeUp 0.3s ease; }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
+    .msg { display: flex; gap: 10px; max-width: 85%; animation: fadeUp 0.3s ease; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .msg.bot { align-self: flex-start; }
     .msg.user { align-self: flex-end; flex-direction: row-reverse; }
 
-    .avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; flex-shrink: 0;
-    }
-    .bot .avatar { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
-    .user .avatar { background: var(--user-bg); border: 1px solid var(--accent); }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .bot .avatar { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+    .user .avatar { background: var(--user-bg); border: 1px solid var(--accent); color: var(--text); }
 
-    .bubble {
-      padding: 12px 16px;
-      border-radius: 16px;
-      font-size: 14px;
-      line-height: 1.6;
-    }
-    .bot .bubble {
-      background: var(--bot-bg);
-      border: 1px solid var(--border);
-      border-top-left-radius: 4px;
-      color: var(--text);
-    }
-    .user .bubble {
-      background: var(--user-bg);
-      border: 1px solid rgba(108,99,255,0.4);
-      border-top-right-radius: 4px;
-      color: var(--text);
-    }
+    .bubble { padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.6; }
+    .bot .bubble { background: var(--bot-bg); border: 1px solid var(--border); border-top-left-radius: 4px; color: var(--text); }
+    .user .bubble { background: var(--user-bg); border: 1px solid rgba(108,99,255,0.4); border-top-right-radius: 4px; color: var(--text); }
 
-    /* ── Result Cards inside bubble ── */
-    .result-section { margin-top: 12px; }
-    .result-section h4 {
-      font-size: 11px; font-weight: 600;
-      color: var(--muted); letter-spacing: 0.08em;
-      text-transform: uppercase; margin-bottom: 8px;
-    }
-    .topic-card {
-      display: flex; align-items: center;
-      gap: 10px; padding: 8px 10px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      border-radius: 8px; margin-bottom: 6px;
-    }
-    .topic-name { font-size: 13px; flex: 1; }
-    .topic-bar-wrap {
-      width: 80px; height: 6px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 3px; overflow: hidden;
-    }
-    .topic-bar {
-      height: 100%; border-radius: 3px;
-      transition: width 0.6s ease;
-    }
-    .topic-pct { font-size: 12px; font-weight: 600; width: 36px; text-align: right; }
-    .badge {
-      font-size: 10px; font-weight: 600;
-      padding: 2px 8px; border-radius: 10px;
-      white-space: nowrap;
-    }
-    .Critical { color: var(--red);    background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3); }
-    .Weak     { color: var(--yellow); background: rgba(251,191,36,0.12);  border: 1px solid rgba(251,191,36,0.3); }
-    .Average  { color: #60a5fa;       background: rgba(96,165,250,0.12);  border: 1px solid rgba(96,165,250,0.3); }
-    .Good     { color: var(--green);  background: rgba(52,211,153,0.12);  border: 1px solid rgba(52,211,153,0.3); }
-
-    .bar-Critical { background: var(--red); }
-    .bar-Weak     { background: var(--yellow); }
-    .bar-Average  { background: #60a5fa; }
-    .bar-Good     { background: var(--green); }
-
-    /* ── Typing indicator ── */
     .typing { display: flex; gap: 4px; padding: 4px 0; }
-    .typing span {
-      width: 6px; height: 6px;
-      background: var(--muted); border-radius: 50%;
-      animation: bounce 1.2s infinite;
-    }
+    .typing span { width: 6px; height: 6px; background: var(--muted); border-radius: 50%; animation: bounce 1.2s infinite; }
     .typing span:nth-child(2) { animation-delay: 0.2s; }
     .typing span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce {
-      0%,80%,100% { transform: translateY(0); }
-      40%          { transform: translateY(-6px); }
-    }
+    @keyframes bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-6px); } }
 
-    /* ── Input Area ── */
     .input-area {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 16px 24px;
-      display: flex; gap: 10px;
-      flex-shrink: 0;
+      background: var(--surface); border-top: 1px solid var(--border); padding: 16px 24px; display: flex; gap: 10px; flex-shrink: 0;
     }
     #msgInput {
-      flex: 1;
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-family: 'Inter', sans-serif;
-      outline: none;
-      transition: border-color 0.2s;
-      resize: none;
-      height: 48px;
+      flex: 1; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px 16px; border-radius: 12px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s;
     }
     #msgInput:focus { border-color: var(--accent); }
     #msgInput::placeholder { color: var(--muted); }
-
     #sendBtn {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border: none; color: white;
-      width: 48px; height: 48px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 18px;
-      transition: opacity 0.2s, transform 0.1s;
-      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: white; width: 44px; height: 44px; border-radius: 12px; cursor: pointer; font-size: 18px; transition: opacity 0.2s, transform 0.1s; flex-shrink: 0;
     }
     #sendBtn:hover { opacity: 0.9; }
-    #sendBtn:active { transform: scale(0.95); }
-    #sendBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Topic Cards in Chat */
+    .result-section { margin-top: 12px; }
+    .result-section h4 { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+    .topic-card { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: rgba(100,100,100,0.05); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; }
+    .topic-name { font-size: 13px; flex: 1; color: var(--text); }
+    .topic-bar-wrap { width: 80px; height: 6px; background: rgba(100,100,100,0.1); border-radius: 3px; overflow: hidden; }
+    .topic-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+    .topic-pct { font-size: 12px; font-weight: 600; width: 36px; text-align: right; }
+    .badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+    
+    .Critical { color: var(--red); background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3); }
+    .Weak { color: var(--yellow); background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.3); }
+    .Average { color: #60a5fa; background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.3); }
+    .Good { color: var(--green); background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3); }
+    
+    .bar-Critical { background: var(--red); }
+    .bar-Weak { background: var(--yellow); }
+    .bar-Average { background: #60a5fa; }
+    .bar-Good { background: var(--green); }
   </style>
 </head>
 <body>
 
-<!-- Header -->
 <header>
   <div class="logo">🎓</div>
   <div class="header-info">
     <h1>EduAgent</h1>
     <p>AI Result Explanation Assistant</p>
   </div>
-  <div class="status-dot">Live</div>
+  <div class="header-right">
+    <div class="status-dot">Live</div>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
+  </div>
 </header>
 
-<!-- Student Selector -->
 <div class="student-bar">
   <label>Student:</label>
-  <select id="studentSelect">
+  <select id="studentSelect" onchange="loadDashboard()">
     <option value="stu_001">Arun Kumar (ACD001)</option>
     <option value="stu_002">Priya Sharma (ACD002)</option>
     <option value="stu_003">Rahul Mehta (ACD003)</option>
@@ -292,38 +290,120 @@
     <button class="quick-btn" onclick="quickAsk('Which topic should I improve?')">📚 Weak topics</button>
     <button class="quick-btn" onclick="quickAsk('How was my last exam?')">📝 Last exam</button>
     <button class="quick-btn" onclick="quickAsk('Am I improving?')">📈 Progress</button>
-    <button class="quick-btn" onclick="quickAsk('Give me a study plan')">🗓️ Study plan</button>
   </div>
 </div>
 
-<!-- Chat -->
-<div id="chat">
-  <div class="msg bot">
-    <div class="avatar">🤖</div>
-    <div class="bubble">
-      👋 Hi! I'm your <strong>EduAgent</strong>.<br/>
-      Select a student above and ask me anything about their exam performance!<br/><br/>
-      Try: <em>"Which topic should I improve?"</em> or use the quick buttons above.
+<div class="main-layout">
+  
+  <!-- Dashboard Layer -->
+  <div class="dashboard-panel" id="dashboardPanel">
+    
+    <div class="dashboard-header-row">
+      <div class="profile-card">
+        <div class="profile-avatar" id="dashAvatar">A</div>
+        <div class="profile-info">
+          <h2 id="dashName">Arun Kumar</h2>
+          <p id="dashId">ID: stu_001</p>
+          <p id="dashBatch">Batch: 2024 - Computer Science</p>
+        </div>
+      </div>
+      
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-value" id="kpiOverall">--%</div>
+          <div class="kpi-label">Overall Percentage</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value" id="kpiImprovement">--%</div>
+          <div class="kpi-label">Improvement (vs Prev)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value" id="kpiExams">0</div>
+          <div class="kpi-label">Exams Attended</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value" id="kpiNextExam">12 Days</div>
+          <div class="kpi-label">Next Exam Countdown</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alerts-container" id="alertsContainer">
+      <!-- Alerts populated here -->
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-container">
+        <h3>Topic Performance (Pie)</h3>
+        <div class="chart-wrapper"><canvas id="pieChart"></canvas></div>
+      </div>
+      <div class="chart-container">
+        <h3>Performance Trend (Line)</h3>
+        <div class="chart-wrapper"><canvas id="lineChart"></canvas></div>
+      </div>
+      <div class="chart-container">
+        <h3>Outcome Strengths (Radar)</h3>
+        <div class="chart-wrapper"><canvas id="radarChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Widget -->
+  <div class="chat-panel">
+    <div id="chat">
+      <div class="msg bot">
+        <div class="avatar">🤖</div>
+        <div class="bubble">
+          👋 Hi! I'm your <strong>EduAgent</strong>.<br/>
+          Select a student and view their dashboard or ask me a question!
+        </div>
+      </div>
+    </div>
+    <div class="input-area">
+      <input id="msgInput" type="text" placeholder="Ask about performance..." />
+      <button id="sendBtn" onclick="sendMessage()">➤</button>
     </div>
   </div>
 </div>
 
-<!-- Input -->
-<div class="input-area">
-  <input id="msgInput" type="text" placeholder="Ask about your exam performance..." />
-  <button id="sendBtn" onclick="sendMessage()">➤</button>
-</div>
-
 <script>
-  const API_BASE = 'http://localhost:5000/api/result-agent';
+  // ── Theme Management ──
+  const themeBtn = document.getElementById('themeBtn');
+  let isDark = localStorage.getItem('theme') !== 'light';
+  
+  function applyTheme() {
+    if (!isDark) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      themeBtn.textContent = '☀️';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      themeBtn.textContent = '🌙';
+    }
+  }
+  
+  function toggleTheme() {
+    isDark = !isDark;
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    applyTheme();
+    // Update charts text colors based on theme
+    Chart.defaults.color = isDark ? '#e8eaf6' : '#0f172a';
+    loadDashboard(); // Re-render charts to apply colors immediately
+  }
+  
+  applyTheme();
+  Chart.defaults.color = isDark ? '#e8eaf6' : '#0f172a';
+  Chart.defaults.font.family = 'Inter';
+
+  // ── Global Variables ──
+  const API_BASE = 'http://localhost:5000/api';
+  let currentConversationId = null;
+  let chartInstances = {};
 
   const chat = document.getElementById('chat');
   const input = document.getElementById('msgInput');
   const sendBtn = document.getElementById('sendBtn');
 
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') sendMessage();
-  });
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
 
   function quickAsk(q) {
     input.value = q;
@@ -333,37 +413,174 @@
   function getStudentId() {
     return document.getElementById('studentSelect').value;
   }
-
-  function appendMsg(role, content) {
-    const div = document.createElement('div');
-    div.className = `msg ${role}`;
-    const isBot = role === 'bot';
-    div.innerHTML = `
-      <div class="avatar">${isBot ? '🤖' : '🧑'}</div>
-      <div class="bubble">${content}</div>`;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-    return div;
+  
+  function getStudentName() {
+    const sel = document.getElementById('studentSelect');
+    return sel.options[sel.selectedIndex].text.split(' (')[0];
   }
 
-  function showTyping() {
-    const div = document.createElement('div');
-    div.className = 'msg bot';
-    div.id = 'typing';
-    div.innerHTML = `
-      <div class="avatar">🤖</div>
-      <div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
+  // ── Dashboard Data Fetching ──
+  async function loadDashboard() {
+    const studentId = getStudentId();
+    const name = getStudentName();
+    
+    // Update Profile Card
+    document.getElementById('dashName').textContent = name;
+    document.getElementById('dashId').textContent = `ID: ${studentId}`;
+    document.getElementById('dashAvatar').textContent = name.charAt(0);
+
+    try {
+      const res = await fetch(`${API_BASE}/result-agent/overall-summary?studentId=${studentId}`);
+      if (!res.ok) throw new Error('Data not found');
+      const summary = await res.json();
+      
+      updateKPIs(summary);
+      updateAlerts(summary.topicResults);
+      renderDashboardCharts(summary);
+    } catch (e) {
+      console.warn('Dashboard load error:', e);
+      document.getElementById('alertsContainer').innerHTML = `<div class="alert-banner critical">⚠️ No dashboard data found for this student.</div>`;
+    }
+    
+    // Reset conversation
+    currentConversationId = null;
   }
 
-  function removeTyping() {
-    const t = document.getElementById('typing');
-    if (t) t.remove();
+  function updateKPIs(summary) {
+    const exams = summary.examSummaries || [];
+    document.getElementById('kpiExams').textContent = exams.length;
+    
+    if (exams.length > 0) {
+      const sortedExams = [...exams].sort((a,b) => new Date(a.submittedAt) - new Date(b.submittedAt));
+      const latest = sortedExams[sortedExams.length - 1];
+      document.getElementById('kpiOverall').textContent = `${latest.percentage}%`;
+      
+      if (exams.length > 1) {
+        const prev = sortedExams[sortedExams.length - 2];
+        const diff = (latest.percentage - prev.percentage).toFixed(1);
+        const sign = diff > 0 ? '+' : '';
+        document.getElementById('kpiImprovement').textContent = `${sign}${diff}%`;
+        document.getElementById('kpiImprovement').style.color = diff >= 0 ? 'var(--green)' : 'var(--red)';
+      } else {
+        document.getElementById('kpiImprovement').textContent = 'N/A';
+        document.getElementById('kpiImprovement').style.color = 'var(--text)';
+      }
+    } else {
+      document.getElementById('kpiOverall').textContent = '--%';
+      document.getElementById('kpiImprovement').textContent = '--%';
+    }
   }
 
-  function levelColor(level) {
-    return level;
+  function updateAlerts(topicResults) {
+    const alerts = document.getElementById('alertsContainer');
+    alerts.innerHTML = '';
+    
+    if (!topicResults || !topicResults.length) return;
+    
+    const critical = topicResults.filter(t => t.level === 'Critical');
+    const weak = topicResults.filter(t => t.level === 'Weak');
+    const good = topicResults.filter(t => t.level === 'Good');
+    
+    if (critical.length > 0) {
+      alerts.innerHTML += `<div class="alert-banner critical">🚨 <strong>Critical Attention Needed:</strong> You are failing in ${critical.map(t=>t.topic).join(', ')}.</div>`;
+    }
+    if (weak.length > 0) {
+      alerts.innerHTML += `<div class="alert-banner weak">⚠️ <strong>Needs Improvement:</strong> Weak performance in ${weak.map(t=>t.topic).join(', ')}.</div>`;
+    }
+    if (good.length > 0) {
+      alerts.innerHTML += `<div class="alert-banner good">✅ <strong>Excellent Work:</strong> Strong performance in ${good.map(t=>t.topic).join(', ')}. Keep it up!</div>`;
+    }
+  }
+
+  function renderDashboardCharts(summary) {
+    const { topicResults, outcomeResults, examSummaries } = summary;
+    
+    Object.values(chartInstances).forEach(c => c.destroy());
+    chartInstances = {};
+
+    // 1. Pie Chart (Topic Performance)
+    if (topicResults && topicResults.length) {
+      const ctxPie = document.getElementById('pieChart').getContext('2d');
+      chartInstances.pie = new Chart(ctxPie, {
+        type: 'doughnut',
+        data: {
+          labels: topicResults.map(t => t.topic),
+          datasets: [{
+            data: topicResults.map(t => t.percentage),
+            backgroundColor: topicResults.map(t => {
+              if (t.level === 'Critical') return '#ef4444';
+              if (t.level === 'Weak') return '#f59e0b';
+              if (t.level === 'Average') return '#3b82f6';
+              return '#10b981';
+            }),
+            borderWidth: 0
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+      });
+    }
+
+    // 2. Line Chart (Exam Trend)
+    if (examSummaries && examSummaries.length) {
+      const sorted = [...examSummaries].sort((a,b) => new Date(a.submittedAt) - new Date(b.submittedAt));
+      const ctxLine = document.getElementById('lineChart').getContext('2d');
+      chartInstances.line = new Chart(ctxLine, {
+        type: 'line',
+        data: {
+          labels: sorted.map(e => e.examName),
+          datasets: [{
+            label: 'Score %',
+            data: sorted.map(e => e.percentage),
+            borderColor: '#6c63ff',
+            backgroundColor: 'rgba(108,99,255,0.1)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+      });
+    }
+
+    // 3. Radar Chart (Outcome Strengths)
+    if (outcomeResults && outcomeResults.length) {
+      const ctxRadar = document.getElementById('radarChart').getContext('2d');
+      chartInstances.radar = new Chart(ctxRadar, {
+        type: 'radar',
+        data: {
+          labels: outcomeResults.map(o => o.outcome.substring(0, 15) + '...'),
+          datasets: [{
+            label: 'Outcome Mastery %',
+            data: outcomeResults.map(o => o.percentage),
+            borderColor: '#a78bfa',
+            backgroundColor: 'rgba(167,139,250,0.2)',
+            pointBackgroundColor: '#a78bfa'
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { r: { beginAtZero: true, max: 100, ticks: { display: false } } } }
+      });
+    }
+  }
+
+  // ── Chat Functions ──
+  function renderChatChart(topicResults, canvasId) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: topicResults.map(t => t.topic),
+        datasets: [{
+          label: 'Performance %',
+          data: topicResults.map(t => t.percentage),
+          backgroundColor: topicResults.map(t => {
+            if (t.level === 'Critical') return '#ef4444';
+            if (t.level === 'Weak') return '#f59e0b';
+            if (t.level === 'Average') return '#3b82f6';
+            return '#10b981';
+          })
+        }]
+      },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+    });
   }
 
   function renderTopics(items, label) {
@@ -373,18 +590,60 @@
       const name  = item.topic || item.outcome;
       const pct   = item.percentage;
       const level = item.level;
+      const colorClass = level === 'Critical' ? 'red' : level === 'Weak' ? 'yellow' : level === 'Good' ? 'green' : 'text';
       html += `
         <div class="topic-card">
           <span class="topic-name">${name}</span>
-          <div class="topic-bar-wrap">
-            <div class="topic-bar bar-${level}" style="width:${pct}%"></div>
-          </div>
-          <span class="topic-pct" style="color:var(--${level === 'Critical' ? 'red' : level === 'Weak' ? 'yellow' : level === 'Good' ? 'green' : 'text'})">${pct}%</span>
+          <div class="topic-bar-wrap"><div class="topic-bar bar-${level}" style="width:${pct}%"></div></div>
+          <span class="topic-pct" style="color:var(--${colorClass})">${pct}%</span>
           <span class="badge ${level}">${level}</span>
         </div>`;
     });
     html += '</div>';
     return html;
+  }
+
+  function appendMsg(role, content, topicResults = null, showTopics = false) {
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    const isBot = role === 'bot';
+    
+    let html = `<div>${content}</div>`;
+    
+    let chartId = null;
+    let sorted = null;
+
+    if (showTopics && topicResults && topicResults.length > 0) {
+      sorted = [...topicResults].sort((a, b) => a.percentage - b.percentage);
+      html += renderTopics(sorted, '📊 Topic-wise Performance');
+      chartId = 'chart_' + Date.now();
+      html += `<div style="margin-top: 15px; background: var(--card); padding: 10px; border-radius: 8px;"><canvas id="${chartId}"></canvas></div>`;
+    }
+    
+    div.innerHTML = `
+      <div class="avatar">${isBot ? '🤖' : '🧑'}</div>
+      <div class="bubble">${html}</div>`;
+    
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+
+    if (chartId && sorted) {
+      renderChatChart(sorted, chartId);
+    }
+    return div;
+  }
+
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'msg bot'; div.id = 'typing';
+    div.innerHTML = `<div class="avatar">🤖</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function removeTyping() {
+    const t = document.getElementById('typing');
+    if (t) t.remove();
   }
 
   async function sendMessage() {
@@ -399,40 +658,45 @@
     showTyping();
 
     try {
-      const res = await fetch(`${API_BASE}/chat`, {
+      const reqBody = { studentId, question: q };
+      if (currentConversationId) {
+        reqBody.conversationId = currentConversationId;
+      }
+
+      const res = await fetch(`${API_BASE}/result-agent/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId, question: q })
+        body: JSON.stringify(reqBody)
       });
       const data = await res.json();
+      
+      if (data.conversationId) {
+        currentConversationId = data.conversationId;
+      }
 
       removeTyping();
 
-      // Build response HTML
-      let html = `<div>${data.answer}</div>`;
-
-      // Fetch full topic data for visual cards
-      try {
-        const summaryRes = await fetch(`${API_BASE}/overall-summary?studentId=${studentId}`);
-        const summary = await summaryRes.json();
-
-        const sorted = [...summary.topicResults].sort((a, b) => a.percentage - b.percentage);
-        html += renderTopics(sorted, '📊 Topic-wise Performance');
-
-        const sortedOC = [...summary.outcomeResults].sort((a, b) => a.percentage - b.percentage);
-        html += renderTopics(sortedOC, '🎯 Outcome-wise Performance');
-      } catch (e) { /* summary optional */ }
-
-      appendMsg('bot', html);
+      const qLower = q.toLowerCase();
+      const shouldShowTopics = qLower.includes('topic') || qLower.includes('improve') || qLower.includes('weak') || qLower.includes('performance');
+      const isUnknownExam = data.answer.toLowerCase().includes('has not been conducted');
+      
+      if (isUnknownExam || !shouldShowTopics || !data.topicResults) {
+        appendMsg('bot', data.answer);
+      } else {
+        appendMsg('bot', data.answer, data.topicResults, true);
+      }
 
     } catch (err) {
       removeTyping();
-      appendMsg('bot', `⚠️ Could not connect to server. Make sure <strong>node app.js</strong> is running on port 5000.`);
+      appendMsg('bot', `⚠️ Error: ${err.message}`);
     }
 
     sendBtn.disabled = false;
     input.focus();
   }
+
+  // Load initial dashboard on startup
+  window.onload = loadDashboard;
 </script>
 </body>
 </html>
