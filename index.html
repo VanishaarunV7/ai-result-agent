@@ -6,14 +6,15 @@
   <title>EduAgent — Student Result Assistant</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0f1117;
-      --surface:   #1a1d27;
-      --card:      #21253a;
-      --border:    #2e3250;
+      --bg:        linear-gradient(135deg, #0a0a0f, #1a1528);
+      --surface:   rgba(26, 29, 39, 0.6);
+      --card:      rgba(33, 37, 58, 0.4);
+      --border:    rgba(255, 255, 255, 0.1);
       --accent:    #6c63ff;
       --accent2:   #a78bfa;
       --green:     #34d399;
@@ -21,15 +22,15 @@
       --yellow:    #fbbf24;
       --text:      #e8eaf6;
       --muted:     #7b82a8;
-      --bot-bg:    #1e2235;
-      --user-bg:   #2d2060;
+      --bot-bg:    rgba(30, 34, 53, 0.7);
+      --user-bg:   rgba(45, 32, 96, 0.7);
     }
 
     [data-theme="light"] {
-      --bg:        #f8fafc;
-      --surface:   #ffffff;
-      --card:      #ffffff;
-      --border:    #e2e8f0;
+      --bg:        linear-gradient(135deg, #f0f4f8, #dbeafe);
+      --surface:   rgba(255, 255, 255, 0.6);
+      --card:      rgba(255, 255, 255, 0.5);
+      --border:    rgba(0, 0, 0, 0.1);
       --accent:    #4f46e5;
       --accent2:   #818cf8;
       --green:     #10b981;
@@ -37,8 +38,15 @@
       --yellow:    #f59e0b;
       --text:      #0f172a;
       --muted:     #64748b;
-      --bot-bg:    #f1f5f9;
-      --user-bg:   #e0e7ff;
+      --bot-bg:    rgba(241, 245, 249, 0.7);
+      --user-bg:   rgba(224, 231, 255, 0.7);
+    }
+
+    /* Glassmorphism Classes */
+    .glass {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
     }
 
     body {
@@ -61,6 +69,7 @@
       align-items: center;
       gap: 14px;
       flex-shrink: 0;
+      backdrop-filter: blur(10px);
     }
     .logo {
       width: 38px; height: 38px;
@@ -143,6 +152,7 @@
     .profile-card {
       background: var(--card); border: 1px solid var(--border); border-radius: 12px;
       padding: 20px; flex: 1; min-width: 250px; display: flex; align-items: center; gap: 20px;
+      backdrop-filter: blur(12px);
     }
     .profile-avatar {
       width: 60px; height: 60px; border-radius: 50%;
@@ -160,7 +170,9 @@
     .kpi-card {
       background: var(--card); border: 1px solid var(--border); border-radius: 12px;
       padding: 16px; display: flex; flex-direction: column; justify-content: center;
+      backdrop-filter: blur(12px); transition: transform 0.2s;
     }
+    .kpi-card:hover { transform: translateY(-3px); }
     .kpi-value { font-size: 24px; font-weight: 700; color: var(--accent); }
     .kpi-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
 
@@ -174,24 +186,28 @@
     .alert-banner.good { background: rgba(52,211,153,0.1); border: 1px solid var(--green); color: var(--green); }
 
     .charts-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
     }
+    @media (max-width: 1200px) { .charts-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
+
     .chart-container {
       background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-      padding: 20px; display: flex; flex-direction: column; align-items: center;
-      height: 320px;
+      padding: 12px 16px; display: flex; flex-direction: column; align-items: center;
+      height: 260px; backdrop-filter: blur(12px);
     }
     .chart-container h3 {
-      font-size: 13px; color: var(--muted); margin-bottom: 16px; align-self: flex-start;
+      font-size: 13px; color: var(--muted); margin-bottom: 12px; align-self: flex-start;
       text-transform: uppercase; letter-spacing: 0.05em;
     }
     .chart-wrapper {
-      position: relative; width: 100%; height: 100%; flex: 1;
+      position: relative; width: 100%; height: 100%; flex: 1; min-height: 0;
     }
 
     /* ── Chat Panel ── */
     .chat-panel {
       width: 400px; border-left: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface);
+      backdrop-filter: blur(10px);
     }
     @media (max-width: 900px) {
       .main-layout { flex-direction: column; }
@@ -255,6 +271,61 @@
     .bar-Weak { background: var(--yellow); }
     .bar-Average { background: #60a5fa; }
     .bar-Good { background: var(--green); }
+    
+    
+    .ai-features-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 24px;
+    }
+    @media (max-width: 900px) {
+      .ai-features-grid { grid-template-columns: 1fr; }
+    }
+    .feature-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; display: flex; flex-direction: column; gap: 12px;
+      backdrop-filter: blur(12px); flex: 1;
+    }
+    .feature-card h3 { font-size: 14px; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;}
+    .feature-value { font-size: 20px; font-weight: 700; color: var(--text); }
+    .feature-sub { font-size: 12px; color: var(--muted); }
+    .feature-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .feature-tags span { font-size: 10px; padding: 4px 8px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); }
+
+    /* ── Tables ── */
+    .table-container {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden; margin-top: 16px; display: flex; flex-direction: column;
+      flex: 1; min-height: 300px; backdrop-filter: blur(12px);
+    }
+    .table-container h3 {
+      font-size: 13px; color: var(--muted); margin: 16px;
+      text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0;
+    }
+    .table-wrapper {
+      overflow-y: auto; flex: 1;
+    }
+    .table-wrapper::-webkit-scrollbar { width: 6px; }
+    .table-wrapper::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+    th {
+      position: sticky; top: 0; background: var(--surface); z-index: 1;
+      padding: 14px 16px; color: var(--muted); font-size: 12px; text-transform: uppercase;
+      border-bottom: 2px solid var(--border); box-shadow: 0 1px 0 var(--border);
+    }
+    td { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text); }
+
+    /* ── Suggestions ── */
+    #suggestions {
+      position: absolute; bottom: 100%; left: 0; width: 100%;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px 12px 0 0; max-height: 200px; overflow-y: auto;
+      display: none; z-index: 10;
+    }
+    .suggestion-item {
+      padding: 10px 24px; cursor: pointer; border-bottom: 1px solid var(--border);
+      font-size: 14px; color: var(--text); transition: background 0.2s;
+    }
+    .suggestion-item:hover { background: var(--card); }
   </style>
 </head>
 <body>
@@ -290,6 +361,7 @@
     <button class="quick-btn" onclick="quickAsk('Which topic should I improve?')">📚 Weak topics</button>
     <button class="quick-btn" onclick="quickAsk('How was my last exam?')">📝 Last exam</button>
     <button class="quick-btn" onclick="quickAsk('Am I improving?')">📈 Progress</button>
+    <button class="quick-btn" onclick="downloadPDF()">📥 Download Report</button>
   </div>
 </div>
 
@@ -302,7 +374,10 @@
       <div class="profile-card">
         <div class="profile-avatar" id="dashAvatar">A</div>
         <div class="profile-info">
-          <h2 id="dashName">Arun Kumar</h2>
+          <div style="display: flex; align-items: center;">
+            <h2 id="dashName">Arun Kumar</h2>
+            <span id="badge" style="margin-left: 8px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: rgba(0,0,0,0.2);"></span>
+          </div>
           <p id="dashId">ID: stu_001</p>
           <p id="dashBatch">Batch: 2024 - Computer Science</p>
         </div>
@@ -332,6 +407,23 @@
       <!-- Alerts populated here -->
     </div>
 
+    
+    <div class="ai-features-grid" id="aiFeatures">
+      <div class="feature-card" id="predEngine">
+        <h3>🔮 Prediction Engine</h3>
+        <div class="feature-value" id="nextExamScore">--%</div>
+        <div class="feature-sub">Predicted Next Exam Score</div>
+        <div class="feature-value" style="font-size: 16px; margin-top: 8px;" id="passProb">--%</div>
+        <div class="feature-sub">Pass Probability</div>
+      </div>
+      <div class="feature-card" id="placementReady">
+        <h3>🚀 Placement Readiness</h3>
+        <div class="feature-value" id="placementScore">--/100</div>
+        <div class="feature-sub">Readiness Score</div>
+        <div id="placementLevel" style="font-size: 12px; font-weight: 600; margin-top: 8px;"></div>
+      </div>
+    </div>
+
     <div class="charts-grid">
       <div class="chart-container">
         <h3>Topic Performance (Pie)</h3>
@@ -344,6 +436,24 @@
       <div class="chart-container">
         <h3>Outcome Strengths (Radar)</h3>
         <div class="chart-wrapper"><canvas id="radarChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <h3>Exam-wise Comparison</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Exam</th>
+              <th>Marks</th>
+              <th>%</th>
+              <th>Level</th>
+            </tr>
+          </thead>
+          <tbody id="examTable">
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -359,8 +469,9 @@
         </div>
       </div>
     </div>
-    <div class="input-area">
-      <input id="msgInput" type="text" placeholder="Ask about performance..." />
+    <div class="input-area" style="position: relative;">
+      <div id="suggestions"></div>
+      <input id="msgInput" type="text" placeholder="Ask about performance..." autocomplete="off" />
       <button id="sendBtn" onclick="sendMessage()">➤</button>
     </div>
   </div>
@@ -398,6 +509,18 @@
   const API_BASE = 'http://localhost:5000/api';
   let currentConversationId = null;
   let chartInstances = {};
+  let currentSummaryData = null;
+
+  const suggestionsList = [
+    "Which topic should I improve?",
+    "How was my last exam?",
+    "Am I improving?",
+    "Give me a study plan",
+    "Which outcome is weak?",
+    "Compare my last two exams",
+    "What is my overall percentage?",
+    "Which topic is my strongest?"
+  ];
 
   const chat = document.getElementById('chat');
   const input = document.getElementById('msgInput');
@@ -420,9 +543,48 @@
   }
 
   // ── Dashboard Data Fetching ──
+  
+  async function loadAIFeatures(studentId) {
+    try {
+      // Clear previous values
+      document.getElementById('nextExamScore').textContent = 'Loading...';
+      document.getElementById('passProb').textContent = 'Loading...';
+      document.getElementById('placementScore').textContent = 'Loading...';
+      document.getElementById('placementLevel').textContent = '';
+
+      console.log("[API] Fetching AI features for", studentId);
+      
+      const pRes = await fetch(`http://localhost:5000/api/features/predictions?studentId=${studentId}`);
+      if(pRes.ok) {
+        const pData = await pRes.json();
+        document.getElementById('nextExamScore').textContent = pData.nextExamScore !== "N/A" ? pData.nextExamScore + '%' : "N/A";
+        document.getElementById('passProb').textContent = pData.passProbability !== "N/A" ? pData.passProbability + '%' : "N/A";
+      } else {
+        document.getElementById('nextExamScore').textContent = 'N/A';
+        document.getElementById('passProb').textContent = 'N/A';
+      }
+
+      const rRes = await fetch(`http://localhost:5000/api/features/placement?studentId=${studentId}`);
+      if(rRes.ok) {
+        const rData = await rRes.json();
+        document.getElementById('placementScore').textContent = rData.readinessScore + '/100';
+        document.getElementById('placementLevel').textContent = "Risk Level: " + rData.riskLevel;
+        document.getElementById('placementLevel').style.color = rData.riskLevel === "Low" ? "var(--green)" : "var(--yellow)";
+      } else {
+        document.getElementById('placementScore').textContent = 'N/A';
+      }
+    } catch (e) {
+      console.error("[API] AI Features failed", e);
+      document.getElementById('nextExamScore').textContent = 'Error';
+      document.getElementById('placementScore').textContent = 'Error';
+    }
+  }
+
   async function loadDashboard() {
     const studentId = getStudentId();
     const name = getStudentName();
+    
+    console.log(`[Dashboard] Loading data for student: ${name} (${studentId})`);
     
     // Update Profile Card
     document.getElementById('dashName').textContent = name;
@@ -430,13 +592,36 @@
     document.getElementById('dashAvatar').textContent = name.charAt(0);
 
     try {
+      console.log(`[API] Fetching overall summary...`);
       const res = await fetch(`${API_BASE}/result-agent/overall-summary?studentId=${studentId}`);
       if (!res.ok) throw new Error('Data not found');
+      
       const summary = await res.json();
+      console.log(`[API] Received summary data:`, summary);
+      currentSummaryData = summary;
       
       updateKPIs(summary);
+      console.log(`[Dashboard] KPIs updated.`);
+      
       updateAlerts(summary.topicResults);
+      console.log(`[Dashboard] Alerts updated.`);
+      
       renderDashboardCharts(summary);
+      console.log(`[Dashboard] Charts rendered.`);
+      
+      renderExamTable(summary.examSummaries);
+      console.log(`[Dashboard] Exam table rendered.`);
+      
+      loadAIFeatures(studentId);
+      
+      loadChatHistory(studentId);
+      
+      if (summary.topicResults) {
+        const weakTopics = summary.topicResults.filter(t => t.level === 'Critical' || t.level === 'Weak');
+        if (weakTopics.length > 0) {
+           showNotification(`Focus needed: ${weakTopics[0].topic} is your weakest area!`);
+        }
+      }
     } catch (e) {
       console.warn('Dashboard load error:', e);
       document.getElementById('alertsContainer').innerHTML = `<div class="alert-banner critical">⚠️ No dashboard data found for this student.</div>`;
@@ -450,10 +635,15 @@
     const exams = summary.examSummaries || [];
     document.getElementById('kpiExams').textContent = exams.length;
     
-    if (exams.length > 0) {
+      if (exams.length > 0) {
       const sortedExams = [...exams].sort((a,b) => new Date(a.submittedAt) - new Date(b.submittedAt));
       const latest = sortedExams[sortedExams.length - 1];
       document.getElementById('kpiOverall').textContent = `${latest.percentage}%`;
+      
+      const badgeObj = assignBadge(latest.percentage);
+      const badgeEl = document.getElementById('badge');
+      badgeEl.textContent = badgeObj.badge;
+      badgeEl.style.color = badgeObj.color;
       
       if (exams.length > 1) {
         const prev = sortedExams[sortedExams.length - 2];
@@ -468,6 +658,9 @@
     } else {
       document.getElementById('kpiOverall').textContent = '--%';
       document.getElementById('kpiImprovement').textContent = '--%';
+      const badgeEl = document.getElementById('badge');
+      badgeEl.textContent = 'No Exams Yet';
+      badgeEl.style.color = 'var(--muted)';
     }
   }
 
@@ -561,6 +754,166 @@
     }
   }
 
+  // ── New Features (PDF, Table, Badge, Suggestions, Notifications, History) ──
+
+  function showNotification(message) {
+    const notif = document.createElement('div');
+    notif.style.cssText = `
+      position: fixed; top: 20px; right: 20px; background: var(--surface);
+      border: 1px solid var(--yellow); color: var(--yellow); padding: 16px 20px;
+      border-radius: 10px; z-index: 9999; animation: fadeUp 0.3s ease; max-width: 300px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    `;
+    notif.innerHTML = `⚠️ ${message}`;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 4000);
+  }
+
+  function downloadPDF() {
+    if (!currentSummaryData) return;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    const studentName = getStudentName();
+    const studentId = getStudentId();
+    
+    let overallPercentage = '--';
+    const exams = currentSummaryData.examSummaries || [];
+    if (exams.length > 0) {
+      const sortedExams = [...exams].sort((a,b) => new Date(a.submittedAt) - new Date(b.submittedAt));
+      overallPercentage = sortedExams[sortedExams.length - 1].percentage;
+    }
+
+    doc.setFontSize(20);
+    doc.text('Student Performance Report', 20, 20);
+    
+    doc.setFontSize(12);
+    doc.text(`Student: ${studentName}`, 20, 40);
+    doc.text(`ID: ${studentId}`, 20, 50);
+    doc.text(`Overall: ${overallPercentage}%`, 20, 60);
+    
+    doc.text('Topic-wise Performance:', 20, 80);
+    const topicResults = currentSummaryData.topicResults || [];
+    topicResults.forEach((t, i) => {
+      doc.text(
+        `${t.topic}: ${t.percentage}% (${t.level})`, 
+        20, 
+        95 + (i * 10)
+      );
+    });
+    
+    doc.save(`report_${studentId}.pdf`);
+  }
+
+  function getLevel(percentage) {
+    if (percentage >= 90) return 'Good';
+    if (percentage >= 75) return 'Average';
+    if (percentage >= 60) return 'Weak';
+    return 'Critical';
+  }
+
+  function renderExamTable(examSummaries) {
+    if (!examSummaries) {
+      document.getElementById('examTable').innerHTML = '';
+      return;
+    }
+    const sortedExams = [...examSummaries].sort((a,b) => new Date(b.submittedAt) - new Date(a.submittedAt)); // Latest first
+    const rows = sortedExams.map(exam => {
+      const level = getLevel(exam.percentage);
+      return `
+      <tr>
+        <td>${exam.examName}</td>
+        <td>${exam.marksScored}/${exam.totalMarks}</td>
+        <td>${exam.percentage}%</td>
+        <td>
+          <span class="badge ${level}">
+            ${level}
+          </span>
+        </td>
+      </tr>
+    `}).join('');
+    
+    document.getElementById('examTable').innerHTML = rows;
+  }
+
+  function assignBadge(percentage) {
+    if (percentage >= 90) return { badge: '🏆 Gold Scholar', color: '#ffd700' };
+    if (percentage >= 75) return { badge: '🥈 Silver Achiever', color: '#c0c0c0' };
+    if (percentage >= 60) return { badge: '🥉 Bronze Learner', color: '#cd7f32' };
+    if (percentage >= 40) return { badge: '📚 Keep Learning', color: '#60a5fa' };
+    return { badge: '💪 Rising Star', color: '#f87171' };
+  }
+
+  document.getElementById('msgInput').addEventListener('input', function() {
+    const val = this.value.toLowerCase();
+    if (!val) {
+      hideSuggestions();
+      return;
+    }
+    const filtered = suggestionsList.filter(s => s.toLowerCase().includes(val));
+    showSuggestions(filtered);
+  });
+
+  function showSuggestions(list) {
+    const div = document.getElementById('suggestions');
+    if (list.length === 0) {
+      hideSuggestions();
+      return;
+    }
+    div.innerHTML = list.map(s => `
+      <div class="suggestion-item" onclick="selectSuggestion('${s.replace(/'/g, "\\'")}')">
+        ${s}
+      </div>
+    `).join('');
+    div.style.display = 'block';
+  }
+
+  function hideSuggestions() {
+    document.getElementById('suggestions').style.display = 'none';
+  }
+
+  function selectSuggestion(text) {
+    document.getElementById('msgInput').value = text;
+    hideSuggestions();
+    sendMessage();
+  }
+  
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.input-area')) {
+      hideSuggestions();
+    }
+  });
+
+  function saveChat(studentId, role, message, topicResults = null, showTopics = false) {
+    const key = `chat_${studentId}`;
+    const history = JSON.parse(localStorage.getItem(key) || '[]');
+    
+    history.push({ role, message, topicResults, showTopics, timestamp: new Date().toISOString() });
+    if (history.length > 20) history.shift();
+    
+    localStorage.setItem(key, JSON.stringify(history));
+  }
+
+  function loadChatHistory(studentId) {
+    const key = `chat_${studentId}`;
+    const history = JSON.parse(localStorage.getItem(key) || '[]');
+    
+    const chatContainer = document.getElementById('chat');
+    chatContainer.innerHTML = `
+      <div class="msg bot">
+        <div class="avatar">🤖</div>
+        <div class="bubble">
+          👋 Hi! I'm your <strong>EduAgent</strong>.<br/>
+          Select a student and view their dashboard or ask me a question!
+        </div>
+      </div>
+    `;
+
+    history.forEach(msg => {
+      appendMsg(msg.role, msg.message, msg.topicResults, msg.showTopics, false);
+    });
+  }
+
   // ── Chat Functions ──
   function renderChatChart(topicResults, canvasId) {
     const ctx = document.getElementById(canvasId).getContext('2d');
@@ -603,7 +956,7 @@
     return html;
   }
 
-  function appendMsg(role, content, topicResults = null, showTopics = false) {
+  function appendMsg(role, content, topicResults = null, showTopics = false, save = true) {
     const div = document.createElement('div');
     div.className = `msg ${role}`;
     const isBot = role === 'bot';
@@ -616,7 +969,7 @@
     if (showTopics && topicResults && topicResults.length > 0) {
       sorted = [...topicResults].sort((a, b) => a.percentage - b.percentage);
       html += renderTopics(sorted, '📊 Topic-wise Performance');
-      chartId = 'chart_' + Date.now();
+      chartId = 'chart_' + Date.now() + Math.floor(Math.random() * 1000);
       html += `<div style="margin-top: 15px; background: var(--card); padding: 10px; border-radius: 8px;"><canvas id="${chartId}"></canvas></div>`;
     }
     
@@ -630,6 +983,11 @@
     if (chartId && sorted) {
       renderChatChart(sorted, chartId);
     }
+
+    if (save) {
+      saveChat(getStudentId(), role, content, topicResults, showTopics);
+    }
+    
     return div;
   }
 
