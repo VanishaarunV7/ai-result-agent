@@ -853,3 +853,10 @@
 
   // Load initial dashboard on startup
   window.onload = loadDashboard;
+
+  function generateStudyPlan() {
+    const input = document.getElementById('chatInput');
+    input.value = "Give me a study plan";
+    sendMessage();
+  }
+

@@ -1,3 +1,4 @@
+
   // ── Theme Management ──
   const themeBtn = document.getElementById('themeBtn');
   let isDark = localStorage.getItem('theme') !== 'light';
@@ -28,7 +29,7 @@
   // ── Global Variables ──
   const API_BASE = 'http://127.0.0.1:5000/api';
   let currentConversationId = null;
-  let chartInstances = {};
+  let chartInstances = {}; let compChartInstances = {};
   let currentSummaryData = null;
 
   const suggestionsList = [
@@ -161,7 +162,7 @@
     }
   }
 
-  let countdownInterval;
+  let countdownInterval; // kept for legacy startCountdown calls (not used for days anymore)
 
   async function loadProgramInfo(studentId) {
     const nameEl = document.getElementById('programName');
@@ -202,6 +203,33 @@
     }
   }
 
+  async function loadAssignedCourses(studentId) {
+    const listEl = document.getElementById('assignedCoursesList');
+    listEl.innerHTML = '<span style="color: var(--muted); font-size: 12px;">Loading assigned courses...</span>';
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/students/${studentId}/assigned-courses`);
+      if (res.ok) {
+        const courses = await res.json();
+        listEl.innerHTML = '';
+        if (courses.length > 0) {
+          courses.forEach(c => {
+            const badge = document.createElement('span');
+            badge.className = 'course-badge';
+            badge.innerHTML = `📖 ${c.course_name} <span style="font-size: 10px; color: var(--muted); font-weight: 500;">(${c.department})</span>`;
+            listEl.appendChild(badge);
+          });
+        } else {
+          listEl.innerHTML = '<span style="color: var(--muted); font-size: 12px;">No courses assigned.</span>';
+        }
+      } else {
+        listEl.innerHTML = '<span style="color: var(--muted); font-size: 12px;">Failed to load courses.</span>';
+      }
+    } catch (e) {
+      console.error("Failed to load assigned courses", e);
+      listEl.innerHTML = '<span style="color: var(--muted); font-size: 12px;">Error loading courses.</span>';
+    }
+  }
+
   async function loadDashboard() {
     const studentId = getStudentId();
     const name = getStudentName();
@@ -226,6 +254,7 @@
       console.log(`[Dashboard] KPIs updated.`);
       
       updateAlerts(summary.topicResults);
+    renderCharts(summary);
       console.log(`[Dashboard] Alerts updated.`);
       
       renderDashboardCharts(summary);
@@ -235,9 +264,9 @@
       console.log(`[Dashboard] Exam table rendered.`);
       
       loadTimetable(studentId);
-      await loadProgramInfo(studentId);
-
-      await loadExamComparison(studentId);
+      loadProgramInfo(studentId);
+      loadAssignedCourses(studentId);
+      loadExamComparison(studentId);
       
       loadChatHistory(studentId);
       
@@ -256,13 +285,79 @@
     currentConversationId = null;
   }
 
+  let topicTrendChartInstance = null;
+
+  async function loadExamComparison(studentId, courseName = "") {
+    const section = document.getElementById('examComparisonSection');
+    const fallback = document.getElementById('examCompFallback');
+    const content = document.getElementById('examCompContent');
+    
+    section.style.display = 'flex';
+    fallback.style.display = 'none';
+    content.style.display = 'none';
+    
+    try {
+      const res = await fetch(`${API_BASE}/result-agent/exam-comparison?studentId=${studentId}` + (courseName ? `&courseName=${encodeURIComponent(courseName)}` : ''));
+      if (!res.ok) throw new Error('Failed to load comparison');
+      const data = await res.json();
+      
+      if (data.message) {
+        fallback.textContent = data.message;
+        fallback.style.display = 'block';
+        return;
+      }
+      
+      content.style.display = 'flex';
+      document.getElementById('examCompCourseName').textContent = data.course;
+      
+      // Render Summary Cards
+      const cardsContainer = document.getElementById('examCompCards');
+      let cardsHtml = '';
+      
+      data.exams.forEach((ex, idx) => {
+        cardsHtml += `
+          <div class="feature-card" style="padding: 16px; text-align: center;">
+            <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">${ex.examName}</div>
+            <div style="font-size: 24px; font-weight: 700; color: var(--text); margin-top: 4px;">${ex.percentage}%</div>
+          </div>
+        `;
+      });
+      
+      cardsHtml += `
+        <div class="feature-card" style="padding: 16px; text-align: center;">
+          <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Average</div>
+          <div style="font-size: 24px; font-weight: 700; color: var(--text); margin-top: 4px;">${data.averagePercentage}%</div>
+        </div>
+        <div class="feature-card" style="padding: 16px; text-align: center;">
+          <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Trend</div>
+          <div style="font-size: 20px; font-weight: 700; color: ${data.improvement.trend === 'Improving' ? 'var(--green)' : 'var(--text)'}; margin-top: 8px;">
+            ${data.improvement.trend === 'Improving' ? '↗️ ' : (data.improvement.trend === 'Declining' ? '↘️ ' : '➖ ')}${data.improvement.trend}
+          </div>
+        </div>
+      `;
+      cardsContainer.innerHTML = cardsHtml;
+      
+    } catch (e) {
+      console.error(e);
+      fallback.textContent = 'Failed to load exam comparison.';
+      fallback.style.display = 'block';
+    }
+  }
+
   function updateKPIs(summary) {
     const exams = summary.examSummaries || [];
+    
+    console.log("Selected Student:", summary.studentId);
+    console.log("Student Exams:", exams);
+    console.log("Exam Count:", exams.length);
+
     document.getElementById('kpiExams').textContent = exams.length;
     
     if (exams.length > 0) {
       const sortedExams = [...exams].sort((a,b) => new Date(a.submittedAt) - new Date(b.submittedAt));
       const latest = sortedExams[sortedExams.length - 1];
+      console.log("Latest Exam:", latest);
+      
       document.getElementById('kpiOverall').textContent = `${latest.percentage}%`;
       
       const badgeObj = assignBadge(latest.percentage);
@@ -271,13 +366,20 @@
       badgeEl.style.color = badgeObj.color;
       
       if (exams.length > 1) {
-        const prev = sortedExams[sortedExams.length - 2];
-        const diff = (latest.percentage - prev.percentage).toFixed(1);
-        const sign = diff > 0 ? '+' : '';
-        document.getElementById('kpiImprovement').textContent = `${sign}${diff}%`;
-        document.getElementById('kpiImprovement').style.color = diff >= 0 ? 'var(--green)' : 'var(--red)';
+        const previousExams = sortedExams.slice(0, sortedExams.length - 1);
+        const prevSum = previousExams.reduce((s, e) => s + e.percentage, 0);
+        const previousAverage = prevSum / previousExams.length;
+        console.log("Previous Average:", previousAverage);
+        
+        const difference = latest.percentage - previousAverage;
+        const improvementPercent = previousAverage > 0 ? ((difference / previousAverage) * 100).toFixed(1) : '100.0';
+        
+        const sign = difference > 0 ? '+' : '';
+        const trendIcon = difference > 0 ? '📈 ' : (difference < 0 ? '📉 ' : '');
+        document.getElementById('kpiImprovement').textContent = `${trendIcon}${sign}${improvementPercent}%`;
+        document.getElementById('kpiImprovement').style.color = difference >= 0 ? 'var(--green)' : 'var(--red)';
       } else {
-        document.getElementById('kpiImprovement').textContent = 'N/A';
+        document.getElementById('kpiImprovement').textContent = 'Not enough history';
         document.getElementById('kpiImprovement').style.color = 'var(--text)';
       }
     } else {
@@ -287,6 +389,128 @@
       badgeEl.textContent = 'No Exams Yet';
       badgeEl.style.color = 'var(--muted)';
     }
+  }
+
+
+  let pieChartInstance = null;
+  let lineChartInstance = null;
+  let radarChartInstance = null;
+
+  function renderCharts(summary) {
+    const container = document.getElementById('chartsContainer');
+    if (!container) return;
+    
+    // Check if we have data
+    if (!summary.topicResults || summary.topicResults.length === 0) {
+      container.style.display = 'none';
+      return;
+    }
+    
+    container.style.display = 'flex';
+
+    if (pieChartInstance) pieChartInstance.destroy();
+    if (lineChartInstance) lineChartInstance.destroy();
+    if (radarChartInstance) radarChartInstance.destroy();
+
+    // 1. Topic Performance Pie Chart
+    const pieCtx = document.getElementById('topicPieChart').getContext('2d');
+    const pieLabels = summary.topicResults.map(t => t.topic);
+    const pieData = summary.topicResults.map(t => t.percentage);
+    
+    pieChartInstance = new Chart(pieCtx, {
+      type: 'pie',
+      data: {
+        labels: pieLabels.length ? pieLabels : ['No Data'],
+        datasets: [{
+          data: pieData.length ? pieData : [100],
+          backgroundColor: pieData.length ? [
+            'rgba(59, 130, 246, 0.8)',
+            'rgba(16, 185, 129, 0.8)',
+            'rgba(245, 158, 11, 0.8)',
+            'rgba(239, 68, 68, 0.8)',
+            'rgba(139, 92, 246, 0.8)'
+          ] : ['rgba(100,100,100,0.2)'],
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.1)'
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    // 2. Performance Trend Line Chart
+    let lineLabels = ['No Data'];
+    let lineData = [0];
+    let labelText = 'No Data';
+    
+    if (summary.examSummaries && summary.examSummaries.length > 0) {
+        const courseMap = {};
+        summary.examSummaries.forEach(ex => {
+          if (!courseMap[ex.courseName]) courseMap[ex.courseName] = [];
+          courseMap[ex.courseName].push(ex);
+        });
+        
+        let targetCourse = Object.values(courseMap).find(exams => exams.length >= 3);
+        if (!targetCourse) {
+           targetCourse = Object.values(courseMap)[0] || [];
+        }
+        
+        targetCourse.sort((a,b) => a.examName.localeCompare(b.examName));
+        
+        lineLabels = targetCourse.map(t => {
+          if(t.examName.includes('Internal Test 1')) return 'IT 1';
+          if(t.examName.includes('Internal Test 2')) return 'IT 2';
+          if(t.examName.includes('Internal Test 3')) return 'IT 3';
+          return t.examName.substring(0, 10);
+        });
+        lineData = targetCourse.map(t => t.percentage);
+        labelText = targetCourse.length ? targetCourse[0].courseName : 'No Data';
+    }
+
+    const lineCtx = document.getElementById('trendLineChart').getContext('2d');
+    lineChartInstance = new Chart(lineCtx, {
+      type: 'line',
+      data: {
+        labels: lineLabels,
+        datasets: [{
+          label: labelText,
+          data: lineData,
+          borderColor: 'rgba(59, 130, 246, 1)',
+          backgroundColor: 'rgba(59, 130, 246, 0.2)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+    });
+
+    // 3. Outcome Radar Chart
+    const radarCtx = document.getElementById('outcomeRadarChart').getContext('2d');
+    let radarLabels = ['No Data'];
+    let radarData = [0];
+    if (summary.outcomeResults && summary.outcomeResults.length > 0) {
+        radarLabels = summary.outcomeResults.map(o => o.outcome.split(' - ')[0]);
+        radarData = summary.outcomeResults.map(o => o.percentage);
+    }
+
+    radarChartInstance = new Chart(radarCtx, {
+      type: 'radar',
+      data: {
+        labels: radarLabels,
+        datasets: [{
+          label: 'Outcome Strengths',
+          data: radarData,
+          borderColor: 'rgba(16, 185, 129, 1)',
+          backgroundColor: 'rgba(16, 185, 129, 0.2)',
+          pointBackgroundColor: 'rgba(16, 185, 129, 1)'
+        }]
+      },
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        scales: { r: { min: 0, max: 100, ticks: { display: false } } },
+        plugins: { legend: { display: false } }
+      }
+    });
   }
 
   function updateAlerts(topicResults) {
@@ -311,73 +535,10 @@
   }
 
   function renderDashboardCharts(summary) {
-    const { topicResults, outcomeResults, examSummaries } = summary;
-    
-    Object.values(chartInstances).forEach(c => c.destroy());
-    chartInstances = {};
-
-    // 1. Pie Chart (Topic Performance)
-    if (topicResults && topicResults.length) {
-      const ctxPie = document.getElementById('pieChart').getContext('2d');
-      chartInstances.pie = new Chart(ctxPie, {
-        type: 'doughnut',
-        data: {
-          labels: topicResults.map(t => t.topic),
-          datasets: [{
-            data: topicResults.map(t => t.percentage),
-            backgroundColor: topicResults.map(t => {
-              if (t.level === 'Critical') return '#ef4444';
-              if (t.level === 'Weak') return '#f59e0b';
-              if (t.level === 'Average') return '#3b82f6';
-              return '#10b981';
-            }),
-            borderWidth: 0
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-      });
-    }
-
-    // 2. Line Chart (Exam Trend)
-    if (examSummaries && examSummaries.length) {
-      const sorted = [...examSummaries].sort((a,b) => new Date(a.submittedAt) - new Date(b.submittedAt));
-      const ctxLine = document.getElementById('lineChart').getContext('2d');
-      chartInstances.line = new Chart(ctxLine, {
-        type: 'line',
-        data: {
-          labels: sorted.map(e => e.examName),
-          datasets: [{
-            label: 'Score %',
-            data: sorted.map(e => e.percentage),
-            borderColor: '#6c63ff',
-            backgroundColor: 'rgba(108,99,255,0.1)',
-            fill: true,
-            tension: 0.3
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
-      });
-    }
-
-    // 3. Radar Chart (Outcome Strengths)
-    if (outcomeResults && outcomeResults.length) {
-      const ctxRadar = document.getElementById('radarChart').getContext('2d');
-      chartInstances.radar = new Chart(ctxRadar, {
-        type: 'radar',
-        data: {
-          labels: outcomeResults.map(o => o.outcome.substring(0, 15) + '...'),
-          datasets: [{
-            label: 'Outcome Mastery %',
-            data: outcomeResults.map(o => o.percentage),
-            borderColor: '#a78bfa',
-            backgroundColor: 'rgba(167,139,250,0.2)',
-            pointBackgroundColor: '#a78bfa'
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, scales: { r: { beginAtZero: true, max: 100, ticks: { display: false } } } }
-      });
-    }
+    // Removed
   }
+
+  // ── New Features (PDF, Table, Badge, Suggestions, Notifications, History) ──
 
   function showNotification(message) {
     const notif = document.createElement('div');
@@ -393,27 +554,7 @@
   }
 
   function downloadPDF() {
-    if (!currentSummaryData) return;
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    const studentName = getStudentName();
     const studentId = getStudentId();
-    
-    let overallPercentage = '--';
-    const exams = currentSummaryData.examSummaries || [];
-    if (exams.length > 0) {
-      const sortedExams = [...exams].sort((a,b) => new Date(a.submittedAt) - new Date(b.submittedAt));
-      overallPercentage = sortedExams[sortedExams.length - 1].percentage;
-    }
-
-    doc.setFontSize(20);
-    doc.text('Student Performance Report', 20, 20);
-    
-    doc.setFontSize(12);
-    doc.text(`Student: ${studentName}`, 20, 40);
-    doc.text(`ID: ${studentId}`, 20, 50);
-    doc.text(`Overall: ${overallPercentage}%`, 20, 60);
     
     doc.text('Topic-wise Performance:', 20, 80);
     const topicResults = currentSummaryData.topicResults || [];
@@ -659,6 +800,38 @@
 
       removeTyping();
 
+      if (data.studyPlan && data.studyPlan.generated) {
+        // Show success message
+        appendMsg('bot', data.answer, null, false);
+        
+        // Show download button
+        const downloadDiv = document.createElement('div');
+        downloadDiv.className = 'msg bot';
+        downloadDiv.innerHTML = `
+          <div class="avatar">🤖</div>
+          <div class="bubble" style="background: linear-gradient(135deg, #6c63ff22, #34d39922); border: 1px solid #6c63ff;">
+            <div style="font-size:13px; font-weight:600; color:#34d399; margin-bottom:8px;">
+              ✅ Study Plan Generated Successfully!
+            </div>
+            <div style="font-size:12px; color:#7b82a8; margin-bottom:12px;">
+              Your personalized 7-day plan with sleep schedule and nutrition guide is ready!
+            </div>
+            <a href="http://127.0.0.1:5000${data.studyPlan.downloadUrl}" 
+               target="_blank"
+               style="display:inline-block; background: linear-gradient(135deg, #6c63ff, #a78bfa); 
+                      color:white; padding:10px 20px; border-radius:8px; 
+                      text-decoration:none; font-size:12px; font-weight:600;">
+              📥 Download Study Plan PDF
+            </a>
+          </div>`;
+        chat.appendChild(downloadDiv);
+        chat.scrollTop = chat.scrollHeight;
+        
+        sendBtn.disabled = false;
+        input.focus();
+        return;
+      }
+
       const qLower = q.toLowerCase();
       const shouldShowTopics = qLower.includes('topic') || qLower.includes('improve') || qLower.includes('weak') || qLower.includes('performance');
       const isUnknownExam = data.answer.toLowerCase().includes('has not been conducted');
@@ -678,178 +851,212 @@
     input.focus();
   }
 
-  let currentStudyPlan = null;
+  // ── RAG PDF Copilot Handlers ──
+  let currentDocId = null;
 
-  async function generateStudyPlan() {
-    const studentId = getStudentId();
-    const dashboard = document.getElementById('studyPlanDashboard');
-    const container = document.getElementById('studyPlanCardsContainer');
-    const summary = document.getElementById('studyPlanSummary');
+  async function uploadPDF() {
+    const fileInput = document.getElementById('pdfInput');
+    const file = fileInput.files[0];
     
-    dashboard.style.display = 'flex';
-    summary.innerHTML = '✨ Generating your personalized study plan... please wait.';
-    container.innerHTML = '';
-    
-    // Auto scroll to study plan dashboard smoothly
-    setTimeout(() => {
-        dashboard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+    if (!file) {
+      alert('Please select a PDF file');
+      return;
+    }
+
+    if (file.type !== 'application/pdf') {
+      alert('Only PDF files allowed');
+      return;
+    }
+
+    // Show loading
+    document.getElementById('uploadStatusText').textContent = '⏳ Uploading...';
+    document.getElementById('pdfDropzone').style.opacity = "0.7";
+
+    // Fix: Use FormData correctly
+    // Do NOT set Content-Type header manually
+    // Let browser set multipart/form-data automatically
+    const formData = new FormData();
+    formData.append('pdf', file);
 
     try {
-      const res = await fetch(`${API_BASE}/study-plan/generate`, {
+      const res = await fetch('http://127.0.0.1:5000/api/rag/upload-pdf', {
+        method: 'POST',
+        body: formData
+        // DO NOT add headers here - multer handles it
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        currentDocId = data.docId;
+        document.getElementById('uploadStatusText').textContent = 
+          '✅ ' + data.fileName + ' uploaded! (' + data.pages + ' pages)';
+        
+        document.getElementById('uploadedFileName').textContent = data.fileName;
+        document.getElementById('pdfDropzone').style.display = 'none';
+        document.getElementById('uploadedFileInfo').style.display = 'flex';
+        
+        // Hide generated questions / answers from any previous document
+        document.getElementById('generatedQuestionsSection').style.display = 'none';
+        document.getElementById('pdfAnswerSection').style.display = 'none';
+        
+        showNotification(`Successfully uploaded ${data.fileName}!`);
+      } else {
+        document.getElementById('uploadStatusText').textContent = 
+          '❌ Failed: ' + data.error;
+        document.getElementById('pdfDropzone').style.opacity = "1";
+      }
+
+    } catch (error) {
+      document.getElementById('uploadStatusText').textContent = 
+        '❌ Upload failed: ' + error.message;
+      document.getElementById('pdfDropzone').style.opacity = "1";
+    }
+  }
+
+  function clearUploadedPdf(event) {
+    if (event) event.stopPropagation();
+    currentDocId = null;
+    document.getElementById('pdfInput').value = '';
+    document.getElementById('pdfDropzone').style.display = 'flex';
+    document.getElementById('pdfDropzone').style.opacity = '1';
+    document.getElementById('uploadStatusText').textContent = "Click to upload PDF";
+    document.getElementById('uploadedFileInfo').style.display = 'none';
+    document.getElementById('generatedQuestionsSection').style.display = 'none';
+    document.getElementById('pdfAnswerSection').style.display = 'none';
+  }
+
+  async function askPdfQuestion() {
+    if (!currentDocId) {
+      showNotification("Please upload a PDF document first!");
+      return;
+    }
+
+    const qInput = document.getElementById('pdfQuestionInput');
+    const question = qInput.value.trim();
+    if (!question) return;
+
+    const askBtn = document.getElementById('askPdfBtn');
+    const answerSection = document.getElementById('pdfAnswerSection');
+    const answerText = document.getElementById('pdfAnswerText');
+    const sourceTextDiv = document.getElementById('pdfSourceText');
+    const sourceSection = document.getElementById('pdfSourceSection');
+    const toggleBtn = document.getElementById('toggleSourceBtn');
+
+    askBtn.disabled = true;
+    askBtn.textContent = "Thinking...";
+    answerSection.style.display = 'block';
+    answerText.textContent = "Analyzing document context and generating answer...";
+    
+    // Reset source text view
+    sourceSection.style.display = 'none';
+    toggleBtn.textContent = "Show Reference Source";
+
+    try {
+      const studentId = getStudentId();
+      const res = await fetch(`${API_BASE}/rag/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId })
+        body: JSON.stringify({ studentId, question, docId: currentDocId })
       });
-      
-      if (!res.ok) throw new Error('Failed to generate study plan');
       const data = await res.json();
-      currentStudyPlan = data;
-      
-      summary.innerHTML = `<strong>Goal:</strong> Improve weak topics | <strong>Total Expected Study Hours:</strong> ${data.totalStudyHours} hours | <strong>Expected Improvement:</strong> ${data.expectedImprovement}`;
-      
-      container.innerHTML = data.weekPlan.map((day, idx) => `
-        <div class="feature-card" style="border-top: 4px solid ${day.color}; position: relative; background: var(--card); backdrop-filter: blur(12px);">
-          <div style="font-size: 24px; position: absolute; top: 12px; right: 12px;">${day.icon}</div>
-          <div style="font-size: 11px; font-weight: 700; color: ${day.color}; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">Day ${day.day} - ${day.dayName}</div>
-          <div style="font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 8px;">${day.topic}</div>
-          <div style="font-size: 12px; color: var(--muted); margin-bottom: 12px; display: flex; gap: 8px; align-items: center;">
-            <span>⏱️ ${day.duration}</span>
-            <span style="padding: 2px 6px; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 10px;">${day.difficulty}</span>
-          </div>
-          <div style="font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 6px;">Tasks:</div>
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            ${day.tasks.map((task, tIdx) => `
-              <label style="display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--text); cursor: pointer;">
-                <input type="checkbox" style="margin-top: 2px; accent-color: ${day.color};" id="task_${idx}_${tIdx}" />
-                <span style="line-height: 1.4;">${task}</span>
-              </label>
-            `).join('')}
-          </div>
-        </div>
-      `).join('');
-      
+      if (!res.ok) throw new Error(data.error || 'Failed to get response');
+
+      answerText.textContent = data.answer;
+      sourceTextDiv.textContent = data.sourceText || "No source chunk available.";
     } catch (err) {
       console.error(err);
-      summary.innerHTML = `<span style="color: var(--red);">⚠️ Error generating study plan: ${err.message}</span>`;
+      answerText.textContent = `⚠️ Error: ${err.message}`;
+    } finally {
+      askBtn.disabled = false;
+      askBtn.textContent = "Ask PDF";
     }
   }
 
-  function downloadStudyPlanPDF() {
-    if (!currentStudyPlan) {
-      alert("Please generate a study plan first.");
+  async function generateQuestions() {
+    if (!currentDocId) {
+      showNotification("Please upload a PDF document first!");
       return;
     }
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const studentName = getStudentName();
-    
-    doc.setFontSize(20);
-    doc.text('Personalized 7-Day Study Plan', 20, 20);
-    
-    doc.setFontSize(12);
-    doc.text(`Student: ${studentName}`, 20, 30);
-    doc.text(`Total Study Hours: ${currentStudyPlan.totalStudyHours}`, 20, 40);
-    doc.text(`Expected Improvement: ${currentStudyPlan.expectedImprovement}`, 20, 48);
-    
-    let y = 60;
-    currentStudyPlan.weekPlan.forEach((dayPlan) => {
-      if (y > 270) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.setFontSize(14);
-      doc.setFont(undefined, 'bold');
-      doc.text(`Day ${dayPlan.day} - ${dayPlan.dayName}: ${dayPlan.topic}`, 20, y);
-      y += 8;
-      
-      doc.setFontSize(11);
-      doc.setFont(undefined, 'normal');
-      doc.text(`Duration: ${dayPlan.duration} | Difficulty: ${dayPlan.difficulty}`, 20, y);
-      y += 8;
-      
-      dayPlan.tasks.forEach(task => {
-        doc.text(`• ${task}`, 25, y);
-        y += 6;
-      });
-      y += 6;
-    });
-    
-    doc.save(`study_plan_${currentStudyPlan.studentId}.pdf`);
-  }
 
-  let comparisonChartInstance = null;
-
-  async function loadExamComparison(studentId, courseName = "") {
-    const dashboard = document.getElementById('examComparisonDashboard');
-    if (!dashboard) return;
-    
-    // If no courseName is provided, find the first course in the student's program
-    if (!courseName) {
-      const programCoursesList = document.getElementById('programCoursesList');
-      if (programCoursesList && programCoursesList.children.length > 0) {
-        const firstLi = programCoursesList.children[0];
-        if (firstLi && firstLi.textContent && firstLi.textContent !== "Loading..." && firstLi.textContent !== "No courses in program.") {
-          courseName = firstLi.textContent.trim();
-        }
-      }
-    }
-    
-    if (!courseName) {
-      dashboard.style.display = 'none';
+    const topicInput = document.getElementById('topicInput');
+    const topic = topicInput.value.trim();
+    if (!topic) {
+      showNotification("Please enter a topic/chapter name!");
       return;
     }
-    
+
+    const genBtn = document.getElementById('genQuestionsBtn');
+    const questionsSection = document.getElementById('generatedQuestionsSection');
+    const questionsGrid = document.getElementById('questionsGrid');
+
+    genBtn.disabled = true;
+    genBtn.textContent = "Generating...";
+    questionsSection.style.display = 'flex';
+    questionsGrid.innerHTML = '<span style="color: var(--muted); font-size: 12px; grid-column: 1/-1;">Generating practice questions from the PDF...</span>';
+
     try {
-      const res = await fetch(`${API_BASE}/result-agent/exam-comparison?studentId=${studentId}&courseName=${encodeURIComponent(courseName)}`);
-      if (!res.ok) throw new Error('Failed to load comparison');
+      const res = await fetch(`${API_BASE}/rag/generate-questions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ docId: currentDocId, topic, count: 5 })
+      });
       const data = await res.json();
-      
-      if (data.message || data.error) {
-        dashboard.style.display = 'none';
-        return;
-      }
-      
-      dashboard.style.display = 'flex';
-      const courseNameHeader = document.getElementById('examCompCourseName');
-      if (courseNameHeader) {
-        courseNameHeader.textContent = data.course;
-      }
-      
-      // Render Summary Cards
-      const cardsContainer = document.getElementById('comparisonSummaryCards');
-      if (cardsContainer) {
-        let cardsHtml = '';
-        (data.exams || []).forEach((ex) => {
-          const displayName = ex.examName.replace(data.course, '').trim();
-          cardsHtml += `
-            <div class="feature-card" style="padding: 16px; text-align: center; flex: 1; min-width: 120px;">
-              <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">${displayName}</div>
-              <div style="font-size: 24px; font-weight: 700; color: var(--text); margin-top: 4px;">${ex.percentage}%</div>
-            </div>
-          `;
-        });
-        
-        cardsHtml += `
-          <div class="feature-card" style="padding: 16px; text-align: center; flex: 1; min-width: 120px;">
-            <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Average</div>
-            <div style="font-size: 24px; font-weight: 700; color: var(--text); margin-top: 4px;">${data.averagePercentage}%</div>
-          </div>
-          <div class="feature-card" style="padding: 16px; text-align: center; flex: 1; min-width: 120px;">
-            <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Trend</div>
-            <div style="font-size: 20px; font-weight: 700; color: ${data.improvement.trend === 'Improving' ? 'var(--green)' : 'var(--red)'}; margin-top: 8px;">
-              ${data.improvement.trend === 'Improving' ? '↗️ ' : (data.improvement.trend === 'Declining' ? '↘️ ' : '➖ ')}&nbsp;${data.improvement.trend}
-            </div>
-          </div>
-        `;
-        cardsContainer.innerHTML = cardsHtml;
-      }
+      if (!res.ok) throw new Error(data.error || 'Failed to generate questions');
 
-    } catch (e) {
-      console.error(e);
-      dashboard.style.display = 'none';
+      questionsGrid.innerHTML = '';
+      if (data.questions && data.questions.length > 0) {
+        data.questions.forEach(q => {
+          const card = document.createElement('div');
+          card.style.cssText = `
+            background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+            padding: 12px; font-size: 12px; cursor: pointer; color: var(--text);
+            transition: all 0.2s; min-height: 50px; display: flex; align-items: center;
+          `;
+          card.textContent = q;
+          card.onclick = () => {
+            document.getElementById('pdfQuestionInput').value = q;
+            askPdfQuestion();
+          };
+          card.onmouseover = () => {
+            card.style.borderColor = 'var(--accent)';
+            card.style.background = 'rgba(108, 99, 255, 0.05)';
+          };
+          card.onmouseout = () => {
+            card.style.borderColor = 'var(--border)';
+            card.style.background = 'var(--card)';
+          };
+          questionsGrid.appendChild(card);
+        });
+      } else {
+        questionsGrid.innerHTML = '<span style="color: var(--muted); font-size: 12px; grid-column: 1/-1;">No questions could be generated.</span>';
+      }
+    } catch (err) {
+      console.error(err);
+      questionsGrid.innerHTML = `<span style="color: var(--red); font-size: 12px; grid-column: 1/-1;">⚠️ Error: ${err.message}</span>`;
+    } finally {
+      genBtn.disabled = false;
+      genBtn.textContent = "Generate 5 Questions";
+    }
+  }
+
+  function toggleSourceText() {
+    const sourceSection = document.getElementById('pdfSourceSection');
+    const toggleBtn = document.getElementById('toggleSourceBtn');
+    if (sourceSection.style.display === 'none') {
+      sourceSection.style.display = 'block';
+      toggleBtn.textContent = "Hide Reference Source";
+    } else {
+      sourceSection.style.display = 'none';
+      toggleBtn.textContent = "Show Reference Source";
     }
   }
 
   // Load initial dashboard on startup
   window.onload = loadDashboard;
+
+  function generateStudyPlan() {
+    const input = document.getElementById('chatInput');
+    input.value = "Give me a study plan";
+    sendMessage();
+  }

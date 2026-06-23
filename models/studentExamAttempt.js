@@ -8,4 +8,4 @@ const studentExamAttemptSchema = new mongoose.Schema({
   percentage: Number,
   status: String
 });
-module.exports = mongoose.model('StudentExamAttempt', studentExamAttemptSchema);
+module.exports = mongoose.models.StudentExamAttempt || mongoose.model('StudentExamAttempt', studentExamAttemptSchema);

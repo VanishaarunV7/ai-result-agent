@@ -47,25 +47,11 @@ async def get_predictions(studentId: str):
 
 
 # Removed Career Navigator Endpoint
-# FEATURE 3: PLACEMENT READINESS SCORE
+# Removed Placement Readiness Endpoint
+
 # ----------------------------------------------------
-@router.get("/api/features/placement")
-async def get_placement_readiness(studentId: str):
-    score = random.randint(70, 90)
-    return {
-        "readinessScore": score,
-        "breakdown": {
-            "Technical Skills": random.randint(75, 95),
-            "Communication": random.randint(60, 85),
-            "Projects": random.randint(80, 100),
-            "Problem Solving": random.randint(70, 90)
-        },
-        "riskLevel": "Low" if score > 80 else "Medium",
-        "improvementSuggestions": [
-            "Participate in mock interviews to improve communication.",
-            "Complete a full-stack project to boost portfolio."
-        ]
-    }
+# FEATURE: EXAM SCHEDULE AND TIMETABLE (Moved to main.py)
+# ----------------------------------------------------
 
 
 # ----------------------------------------------------

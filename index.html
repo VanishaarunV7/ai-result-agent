@@ -142,16 +142,20 @@
     /* ── Dashboard Panel ── */
     .dashboard-panel {
       flex: 1; padding: 24px; overflow-y: auto;
-      display: flex; flex-direction: column; gap: 24px;
+      display: flex; flex-direction: column; gap: 16px;
     }
     .dashboard-panel::-webkit-scrollbar { width: 6px; }
     .dashboard-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
     .dashboard-header-row { display: flex; gap: 24px; flex-wrap: wrap; }
+
+    .profile-column {
+      flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 16px;
+    }
     
     .profile-card {
       background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-      padding: 20px; flex: 1; min-width: 250px; display: flex; align-items: center; gap: 20px;
+      padding: 20px; display: flex; align-items: center; gap: 20px;
       backdrop-filter: blur(12px);
     }
     .profile-avatar {
@@ -164,8 +168,8 @@
     .profile-info p { font-size: 13px; color: var(--muted); margin-bottom: 2px; }
 
     .kpi-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 16px; flex: 2; min-width: 300px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 16px; flex: 2; min-width: 200px;
     }
     .kpi-card {
       background: var(--card); border: 1px solid var(--border); border-radius: 12px;
@@ -175,6 +179,35 @@
     .kpi-card:hover { transform: translateY(-3px); }
     .kpi-value { font-size: 24px; font-weight: 700; color: var(--accent); }
     .kpi-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .program-card-title {
+      font-size: 13px; color: var(--accent2); text-transform: uppercase;
+      letter-spacing: 0.05em; font-weight: 700; margin-bottom: 12px;
+    }
+    .program-name-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .program-name-value { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+    .program-courses-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .program-courses-list {
+      list-style: none; max-height: 140px; overflow-y: auto; padding-right: 4px;
+    }
+    .program-courses-list::-webkit-scrollbar { width: 4px; }
+    .program-courses-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .program-courses-list li {
+      font-size: 13px; color: var(--text); padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .program-courses-list li:last-child { border-bottom: none; }
+    .program-courses-list li::before { content: '• '; color: var(--accent2); }
+
+    .exam-comparison-container .table-wrapper {
+      max-height: 400px; min-height: 120px; overflow-y: auto;
+    }
+    .exam-comparison-container thead th {
+      position: sticky; top: 0; z-index: 2;
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
 
     .alerts-container { display: flex; flex-direction: column; gap: 10px; }
     .alert-banner {
@@ -272,17 +305,11 @@
     .bar-Average { background: #60a5fa; }
     .bar-Good { background: var(--green); }
     
-    
-    .ai-features-grid {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 24px;
-    }
-    @media (max-width: 900px) {
-      .ai-features-grid { grid-template-columns: 1fr; }
-    }
+
     .feature-card {
       background: var(--card); border: 1px solid var(--border); border-radius: 12px;
       padding: 16px; display: flex; flex-direction: column; gap: 12px;
-      backdrop-filter: blur(12px); flex: 1;
+      backdrop-filter: blur(12px);
     }
     .feature-card h3 { font-size: 14px; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;}
     .feature-value { font-size: 20px; font-weight: 700; color: var(--text); }
@@ -293,15 +320,15 @@
     /* ── Tables ── */
     .table-container {
       background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-      overflow: hidden; margin-top: 16px; display: flex; flex-direction: column;
-      flex: 1; min-height: 300px; backdrop-filter: blur(12px);
+      overflow: hidden; display: flex; flex-direction: column;
+      backdrop-filter: blur(12px);
     }
     .table-container h3 {
       font-size: 13px; color: var(--muted); margin: 16px;
       text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0;
     }
     .table-wrapper {
-      overflow-y: auto; flex: 1;
+      overflow-y: auto; flex: 1; max-height: 300px;
     }
     .table-wrapper::-webkit-scrollbar { width: 6px; }
     .table-wrapper::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -326,6 +353,14 @@
       font-size: 14px; color: var(--text); transition: background 0.2s;
     }
     .suggestion-item:hover { background: var(--card); }
+    .course-badge {
+      background: rgba(108,99,255,0.06); border: 1px solid var(--border);
+      padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--text);
+      display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; cursor: default;
+    }
+    .course-badge:hover {
+      background: rgba(108,99,255,0.15); border-color: var(--accent); transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
@@ -361,6 +396,7 @@
     <button class="quick-btn" onclick="quickAsk('Which topic should I improve?')">📚 Weak topics</button>
     <button class="quick-btn" onclick="quickAsk('How was my last exam?')">📝 Last exam</button>
     <button class="quick-btn" onclick="quickAsk('Am I improving?')">📈 Progress</button>
+    <button class="quick-btn" onclick="quickAsk('When is my next exam?')">📅 Next exam</button>
     <button class="quick-btn" onclick="downloadPDF()">📥 Download Report</button>
   </div>
 </div>
@@ -371,15 +407,27 @@
   <div class="dashboard-panel" id="dashboardPanel">
     
     <div class="dashboard-header-row">
-      <div class="profile-card">
-        <div class="profile-avatar" id="dashAvatar">A</div>
-        <div class="profile-info">
-          <div style="display: flex; align-items: center;">
-            <h2 id="dashName">Arun Kumar</h2>
-            <span id="badge" style="margin-left: 8px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: rgba(0,0,0,0.2);"></span>
+      <div class="profile-column">
+        <div class="profile-card">
+          <div class="profile-avatar" id="dashAvatar">A</div>
+          <div class="profile-info">
+            <div style="display: flex; align-items: center;">
+              <h2 id="dashName">Arun Kumar</h2>
+              <span id="badge" style="margin-left: 8px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: rgba(0,0,0,0.2);"></span>
+            </div>
+            <p id="dashId">ID: stu_001</p>
+            <p id="dashBatch">Batch: 2024</p>
           </div>
-          <p id="dashId">ID: stu_001</p>
-          <p id="dashBatch">Batch: 2024 - Computer Science</p>
+        </div>
+
+        <div class="kpi-card" id="academicProgramCard">
+          <div class="program-card-title">🎓 Academic Program</div>
+          <div class="program-name-label">Program:</div>
+          <div class="program-name-value" id="programName">—</div>
+          <div class="program-courses-label">Courses:</div>
+          <ul class="program-courses-list" id="programCoursesList">
+            <li style="color: var(--muted);">Loading...</li>
+          </ul>
         </div>
       </div>
       
@@ -403,25 +451,140 @@
       </div>
     </div>
 
+    <!-- ── RAG PDF COPILOT SECTION ── -->
+    <div class="feature-card" id="ragCopilotCard" style="padding: 20px; display: flex; flex-direction: column; gap: 16px; margin-bottom: 10px;">
+      <h3 style="font-size: 13px; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; font-weight: 700; margin-top: 0; margin-bottom: 4px;">
+        📄 RAG PDF Study Copilot
+      </h3>
+      
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: stretch;">
+        <!-- Left: Upload Section -->
+        <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">1. Upload Study Material</div>
+          <div id="pdfDropzone" style="border: 2px dashed var(--border); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: rgba(255,255,255,0.01); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 120px;" onclick="document.getElementById('pdfFileInput').click()">
+            <span style="font-size: 32px; margin-bottom: 6px;">📤</span>
+            <span id="uploadStatusText" style="font-size: 12px; color: var(--text); font-weight: 500;">Click to upload PDF</span>
+            <span style="font-size: 10px; color: var(--muted); margin-top: 4px;">Max size 10MB</span>
+            <input type="file" id="pdfFileInput" accept=".pdf" style="display: none;" onchange="handlePdfUpload(event)" />
+          </div>
+          <div id="uploadedFileInfo" style="display: none; align-items: center; justify-content: space-between; font-size: 12px; background: rgba(52,211,153,0.08); border: 1px solid var(--green); color: var(--green); padding: 8px 12px; border-radius: 8px; animation: fadeUp 0.3s ease;">
+            <div style="display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">
+              <span style="font-size: 14px;">✓</span>
+              <span id="uploadedFileName" style="font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">chapter3.pdf</span>
+            </div>
+            <button onclick="clearUploadedPdf(event)" style="background: transparent; border: none; color: var(--red); cursor: pointer; font-size: 12px; font-weight: 600; padding: 0 4px;">Remove</button>
+          </div>
+        </div>
+
+        <!-- Right: Actions Section -->
+        <div style="flex: 2; min-width: 300px; display: flex; flex-direction: column; gap: 12px; justify-content: space-between;">
+          <div>
+            <div style="font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">2. PDF QA & Question Generator</div>
+            
+            <!-- Question Generator -->
+            <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+              <input type="text" id="topicInput" placeholder="Topic/Chapter (e.g. Asset depreciation)" style="flex: 2; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 12px; outline: none; transition: border-color 0.2s;" />
+              <button onclick="generateQuestions()" id="genQuestionsBtn" class="quick-btn" style="padding: 8px 16px; font-size: 12px; border-radius: 8px; background: rgba(167,139,250,0.1); border-color: var(--accent2); color: var(--accent2);">
+                Generate 5 Questions
+              </button>
+            </div>
+
+            <!-- PDF Ask Question -->
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <input type="text" id="pdfQuestionInput" placeholder="Ask a question about the uploaded document..." style="flex: 2; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 12px; outline: none; transition: border-color 0.2s;" onkeydown="if(event.key==='Enter') askPdfQuestion()" />
+              <button onclick="askPdfQuestion()" id="askPdfBtn" class="quick-btn" style="padding: 8px 16px; font-size: 12px; border-radius: 8px; background: rgba(108,99,255,0.1); border-color: var(--accent); color: var(--accent2);">
+                Ask PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Practice Questions Grid -->
+      <div id="generatedQuestionsSection" style="display: none; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 4px;">
+        <div style="font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">🎯 Generated Practice Questions (Click to ask)</div>
+        <div id="questionsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- QA Response Section -->
+      <div id="pdfAnswerSection" style="display: none; background: var(--bot-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-top: 4px; animation: fadeUp 0.3s ease;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <span>💡 PDF Copilot Response</span>
+          <button id="toggleSourceBtn" onclick="toggleSourceText()" style="background: transparent; border: none; color: var(--accent2); cursor: pointer; font-size: 11px; text-decoration: underline; font-weight: 600; outline: none;">Show Reference Source</button>
+        </div>
+        <div id="pdfAnswerText" style="font-size: 13px; line-height: 1.6; color: var(--text); white-space: pre-wrap;">
+          Answer will display here...
+        </div>
+        <div id="pdfSourceSection" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 11px; color: var(--muted); line-height: 1.4;">
+          <strong>Source Chunk Reference (500 chars):</strong>
+          <div id="pdfSourceText" style="font-family: monospace; background: rgba(0,0,0,0.25); padding: 8px; border-radius: 6px; margin-top: 4px; overflow-x: auto; white-space: pre-wrap; color: var(--text);">
+            Source text...
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <div class="alerts-container" id="alertsContainer">
       <!-- Alerts populated here -->
     </div>
 
-    
-    <div class="ai-features-grid" id="aiFeatures">
-      <div class="feature-card" id="predEngine">
-        <h3>🔮 Prediction Engine</h3>
-        <div class="feature-value" id="nextExamScore">--%</div>
-        <div class="feature-sub">Predicted Next Exam Score</div>
-        <div class="feature-value" style="font-size: 16px; margin-top: 8px;" id="passProb">--%</div>
-        <div class="feature-sub">Pass Probability</div>
+    <!-- ── NEXT EXAM CARD ── -->
+    <div id="nextExamContainer" style="display: none;">
+      <div class="feature-card" style="flex-direction: row; align-items: stretch; justify-content: space-between; padding: 20px; gap: 20px;">
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;">📅 UPCOMING EXAM</div>
+          <div id="nextExamName" style="font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">--</div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div id="nextExamDate" style="font-size: 13px; color: var(--muted);">Date: --</div>
+            <div id="nextExamTime" style="font-size: 13px; color: var(--muted);">Time: --</div>
+            <div id="nextExamRoom" style="font-size: 13px; color: var(--muted);">Room: --</div>
+          </div>
+        </div>
+        <div style="text-align: center; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.25); border-radius: 12px; padding: 16px 24px;">
+          <div style="font-size: 12px; color: var(--muted); margin-bottom: 4px;">⏳</div>
+          <div id="nextExamDays" style="font-size: 32px; font-weight: 700; color: var(--accent); line-height: 1;">--</div>
+          <div style="font-size: 11px; color: var(--muted); margin-top: 4px; white-space: nowrap;">Days Remaining</div>
+        </div>
       </div>
-      <div class="feature-card" id="placementReady">
-        <h3>🚀 Placement Readiness</h3>
-        <div class="feature-value" id="placementScore">--/100</div>
-        <div class="feature-sub">Readiness Score</div>
-        <div id="placementLevel" style="font-size: 12px; font-weight: 600; margin-top: 8px;"></div>
+    </div>
+    <div id="noExamsContainer" class="feature-card" style="display: none; align-items: center; justify-content: center; height: 60px;">
+      <p style="color: var(--muted); font-weight: 500; margin: 0;">No exam schedules found for this student.</p>
+    </div>
+
+    <!-- ── UPCOMING EXAM SCHEDULE TABLE ── -->
+    <div id="timetableSection" style="display: none;">
+      <div class="table-container">
+        <h3>📋 Upcoming Exam Schedule</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Exam</th>
+                <th>Course</th>
+                <th>Room</th>
+                <th>Countdown</th>
+              </tr>
+            </thead>
+            <tbody id="timetableBody"></tbody>
+          </table>
+        </div>
       </div>
+    </div>
+    <!-- ── EXAM COMPARISON DASHBOARD ── -->
+    <div id="examComparisonDashboard" style="display: none; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+      <h3 style="font-size: 13px; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.05em; margin: 0; font-weight: 700;">📊 Exam Comparison — <span id="examCompCourseName"></span></h3>
+      
+      <!-- Summary Cards Row -->
+      <div style="display: flex; gap: 16px; flex-wrap: wrap;" id="comparisonSummaryCards">
+         <!-- Filled dynamically -->
+      </div>
+      
+
     </div>
 
     <div class="charts-grid">
@@ -439,19 +602,20 @@
       </div>
     </div>
 
-    <div class="table-container">
+    <div class="table-container exam-comparison-container">
       <h3>Exam-wise Comparison</h3>
-      <div class="table-wrapper">
+      <div class="table-wrapper" id="examTableWrapper">
         <table>
           <thead>
             <tr>
               <th>Exam</th>
               <th>Marks</th>
-              <th>%</th>
+              <th>Percentage</th>
               <th>Level</th>
             </tr>
           </thead>
-          <tbody id="examTable">
+          <tbody id="examTableBody">
+            <tr><td colspan="4" style="text-align:center; color:var(--muted); padding: 24px;">No exam records available.</td></tr>
           </tbody>
         </table>
       </div>
@@ -506,7 +670,7 @@
   Chart.defaults.font.family = 'Inter';
 
   // ── Global Variables ──
-  const API_BASE = 'http://localhost:5000/api';
+  const API_BASE = 'http://127.0.0.1:5000/api';
   let currentConversationId = null;
   let chartInstances = {};
   let currentSummaryData = null;
@@ -515,6 +679,9 @@
     "Which topic should I improve?",
     "How was my last exam?",
     "Am I improving?",
+    "What is my program?",
+    "What courses are assigned to me?",
+    "Show my program details",
     "Give me a study plan",
     "Which outcome is weak?",
     "Compare my last two exams",
@@ -544,39 +711,138 @@
 
   // ── Dashboard Data Fetching ──
   
-  async function loadAIFeatures(studentId) {
-    try {
-      // Clear previous values
-      document.getElementById('nextExamScore').textContent = 'Loading...';
-      document.getElementById('passProb').textContent = 'Loading...';
-      document.getElementById('placementScore').textContent = 'Loading...';
-      document.getElementById('placementLevel').textContent = '';
+  async function loadTimetable(studentId) {
+    console.log("Selected Student:", studentId);
+    const nextContainer  = document.getElementById('nextExamContainer');
+    const noExamsContainer = document.getElementById('noExamsContainer');
+    const timetableSection = document.getElementById('timetableSection');
+    const timetableBody  = document.getElementById('timetableBody');
+    const kpiEl          = document.getElementById('kpiNextExam');
 
-      console.log("[API] Fetching AI features for", studentId);
-      
-      const pRes = await fetch(`http://localhost:5000/api/features/predictions?studentId=${studentId}`);
-      if(pRes.ok) {
-        const pData = await pRes.json();
-        document.getElementById('nextExamScore').textContent = pData.nextExamScore !== "N/A" ? pData.nextExamScore + '%' : "N/A";
-        document.getElementById('passProb').textContent = pData.passProbability !== "N/A" ? pData.passProbability + '%' : "N/A";
+    // Reset state
+    nextContainer.style.display    = 'none';
+    noExamsContainer.style.display = 'none';
+    timetableSection.style.display = 'none';
+    timetableBody.innerHTML        = '';
+
+    try {
+      // ── Fetch full schedule ──────────────────────────────────────────────
+      const schedRes = await fetch(`http://127.0.0.1:5000/students/${studentId}/exam-schedule`);
+      if (schedRes.ok) {
+        const exams = await schedRes.json();
+        if (exams.length > 0) {
+          timetableSection.style.display = 'block';
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          exams.forEach(ex => {
+            const dateObj = new Date(ex.exam_date + 'T00:00:00');
+            const fDate = dateObj.toLocaleDateString(undefined, {day: '2-digit', month: 'short', year: 'numeric'});
+            const diffMs = dateObj - today;
+            const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+            const countdownText = daysLeft > 0 ? `${daysLeft} Days` : daysLeft === 0 ? 'Today' : 'Past';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${fDate}</td>
+              <td>${ex.start_time}</td>
+              <td style="font-weight:600;">${ex.exam_name}</td>
+              <td>${ex.course}</td>
+              <td>${ex.room}</td>
+              <td style="color:var(--accent); font-weight:600;">${countdownText}</td>
+            `;
+            timetableBody.appendChild(tr);
+          });
+        } else {
+          // Show no-exams container only when confirmed empty
+          const pEl = noExamsContainer.querySelector('p');
+          if (pEl) pEl.textContent = "No exam schedules found for this student.";
+          noExamsContainer.style.display = 'flex';
+        }
       } else {
-        document.getElementById('nextExamScore').textContent = 'N/A';
-        document.getElementById('passProb').textContent = 'N/A';
+        const pEl = noExamsContainer.querySelector('p');
+        if (pEl) pEl.textContent = "No exam schedules found for this student.";
+        noExamsContainer.style.display = 'flex';
       }
 
-      const rRes = await fetch(`http://localhost:5000/api/features/placement?studentId=${studentId}`);
-      if(rRes.ok) {
-        const rData = await rRes.json();
-        document.getElementById('placementScore').textContent = rData.readinessScore + '/100';
-        document.getElementById('placementLevel').textContent = "Risk Level: " + rData.riskLevel;
-        document.getElementById('placementLevel').style.color = rData.riskLevel === "Low" ? "var(--green)" : "var(--yellow)";
+      // ── Fetch next exam ───────────────────────────────────────────────────
+      const nextRes = await fetch(`http://127.0.0.1:5000/students/${studentId}/next-exam`);
+      if (nextRes.ok) {
+        const nextExam = await nextRes.json();
+
+        if (nextExam && nextExam.exam_date) {
+          // Populate the Next Exam card
+          const dateObj  = new Date(nextExam.exam_date + 'T00:00:00');
+          const fDate    = dateObj.toLocaleDateString(undefined, {day: '2-digit', month: 'short', year: 'numeric'});
+
+          document.getElementById('nextExamName').textContent = nextExam.exam_name;
+          document.getElementById('nextExamDate').textContent = `Date: ${fDate}`;
+          document.getElementById('nextExamTime').textContent = `Time: ${nextExam.start_time} – ${nextExam.end_time}`;
+          document.getElementById('nextExamRoom').textContent = `Room: ${nextExam.room}`;
+
+          // ── Countdown (Math.ceil so partial days round up) ────────────────
+          const today   = new Date();
+          today.setHours(0, 0, 0, 0);
+          const examDay = new Date(nextExam.exam_date + 'T00:00:00');
+          const diffMs  = examDay - today;
+          const days    = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+          const daysEl = document.getElementById('nextExamDays');
+          daysEl.textContent = days > 0 ? days : 'Today';
+          kpiEl.textContent  = days > 0 ? `${days}d` : 'Today';
+
+          nextContainer.style.display = 'block';
+        } else {
+          noExamsContainer.style.display = 'flex';
+          kpiEl.textContent = '--';
+        }
       } else {
-        document.getElementById('placementScore').textContent = 'N/A';
+        noExamsContainer.style.display = 'flex';
+        kpiEl.textContent = '--';
       }
     } catch (e) {
-      console.error("[API] AI Features failed", e);
-      document.getElementById('nextExamScore').textContent = 'Error';
-      document.getElementById('placementScore').textContent = 'Error';
+      console.error('Timetable load failed:', e);
+      noExamsContainer.style.display = 'flex';
+      kpiEl.textContent = '--';
+    }
+  }
+
+  let countdownInterval; // kept for legacy startCountdown calls (not used for days anymore)
+
+  async function loadProgramInfo(studentId) {
+    const nameEl = document.getElementById('programName');
+    const listEl = document.getElementById('programCoursesList');
+    const batchEl = document.getElementById('dashBatch');
+    nameEl.textContent = '—';
+    listEl.innerHTML = '<li style="color: var(--muted);">Loading...</li>';
+
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/students/${studentId}/courses`);
+      if (res.ok) {
+        const data = await res.json();
+        nameEl.textContent = data.program_name;
+        batchEl.textContent = `Program: ${data.program_name}`;
+        listEl.innerHTML = '';
+        if (data.courses && data.courses.length > 0) {
+          data.courses.forEach(c => {
+            const li = document.createElement('li');
+            li.textContent = c;
+            li.style.cursor = 'pointer';
+            li.style.textDecoration = 'underline';
+            li.style.color = 'var(--accent)';
+            li.onclick = () => loadExamComparison(studentId, c);
+            listEl.appendChild(li);
+          });
+        } else {
+          listEl.innerHTML = '<li style="color: var(--muted);">No courses in program.</li>';
+        }
+      } else {
+        nameEl.textContent = 'Not assigned';
+        batchEl.textContent = 'Program: Not assigned';
+        listEl.innerHTML = '<li style="color: var(--muted);">No academic program has been assigned yet.</li>';
+      }
+    } catch (e) {
+      console.error('Failed to load program info', e);
+      nameEl.textContent = 'Error';
+      listEl.innerHTML = '<li style="color: var(--muted);">Could not load program.</li>';
     }
   }
 
@@ -612,7 +878,10 @@
       renderExamTable(summary.examSummaries);
       console.log(`[Dashboard] Exam table rendered.`);
       
-      loadAIFeatures(studentId);
+      loadTimetable(studentId);
+      await loadProgramInfo(studentId);
+
+      await loadExamComparison(studentId);
       
       loadChatHistory(studentId);
       
@@ -813,27 +1082,29 @@
   }
 
   function renderExamTable(examSummaries) {
-    if (!examSummaries) {
-      document.getElementById('examTable').innerHTML = '';
+    const tbody = document.getElementById('examTableBody');
+    if (!examSummaries || examSummaries.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--muted); padding: 24px;">No exam records available.</td></tr>';
       return;
     }
-    const sortedExams = [...examSummaries].sort((a,b) => new Date(b.submittedAt) - new Date(a.submittedAt)); // Latest first
-    const rows = sortedExams.map(exam => {
+    const sortedExams = [...examSummaries].sort((a, b) => {
+      const da = a.submittedAt ? new Date(a.submittedAt) : 0;
+      const db = b.submittedAt ? new Date(b.submittedAt) : 0;
+      return db - da;
+    });
+    tbody.innerHTML = sortedExams.map(exam => {
       const level = getLevel(exam.percentage);
+      const marksScored = exam.marksScored ?? 0;
+      const totalMarks = exam.totalMarks ?? 0;
+      const pct = exam.percentage ?? 0;
       return `
       <tr>
-        <td>${exam.examName}</td>
-        <td>${exam.marksScored}/${exam.totalMarks}</td>
-        <td>${exam.percentage}%</td>
-        <td>
-          <span class="badge ${level}">
-            ${level}
-          </span>
-        </td>
-      </tr>
-    `}).join('');
-    
-    document.getElementById('examTable').innerHTML = rows;
+        <td>${exam.examName || '—'}</td>
+        <td>${marksScored}/${totalMarks}</td>
+        <td>${pct}%</td>
+        <td><span class="badge ${level}">${level}</span></td>
+      </tr>`;
+    }).join('');
   }
 
   function assignBadge(percentage) {
@@ -1034,6 +1305,38 @@
 
       removeTyping();
 
+      if (data.studyPlan && data.studyPlan.generated) {
+        // Show success message
+        appendMsg('bot', data.answer, null, false);
+        
+        // Show download button
+        const downloadDiv = document.createElement('div');
+        downloadDiv.className = 'msg bot';
+        downloadDiv.innerHTML = `
+          <div class="avatar">🤖</div>
+          <div class="bubble" style="background: linear-gradient(135deg, #6c63ff22, #34d39922); border: 1px solid #6c63ff;">
+            <div style="font-size:13px; font-weight:600; color:#34d399; margin-bottom:8px;">
+              ✅ Study Plan Generated Successfully!
+            </div>
+            <div style="font-size:12px; color:#7b82a8; margin-bottom:12px;">
+              Your personalized 7-day plan with sleep schedule and nutrition guide is ready!
+            </div>
+            <a href="http://127.0.0.1:5000${data.studyPlan.downloadUrl}" 
+               target="_blank"
+               style="display:inline-block; background: linear-gradient(135deg, #6c63ff, #a78bfa); 
+                      color:white; padding:10px 20px; border-radius:8px; 
+                      text-decoration:none; font-size:12px; font-weight:600;">
+              📥 Download Study Plan PDF
+            </a>
+          </div>`;
+        chat.appendChild(downloadDiv);
+        chat.scrollTop = chat.scrollHeight;
+        
+        sendBtn.disabled = false;
+        input.focus();
+        return;
+      }
+
       const qLower = q.toLowerCase();
       const shouldShowTopics = qLower.includes('topic') || qLower.includes('improve') || qLower.includes('weak') || qLower.includes('performance');
       const isUnknownExam = data.answer.toLowerCase().includes('has not been conducted');
@@ -1053,8 +1356,359 @@
     input.focus();
   }
 
+  // ── RAG PDF Copilot Handlers ──
+  let currentDocId = null;
+
+  async function handlePdfUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const statusText = document.getElementById('uploadStatusText');
+    const dropzone = document.getElementById('pdfDropzone');
+    const fileInfo = document.getElementById('uploadedFileInfo');
+    const fileNameSpan = document.getElementById('uploadedFileName');
+
+    statusText.textContent = "Uploading & parsing PDF...";
+    dropzone.style.opacity = "0.7";
+
+    const formData = new FormData();
+    formData.append('pdf', file);
+    formData.append('subjectName', 'Accounting');
+
+    try {
+      const res = await fetch(`${API_BASE}/rag/upload-pdf`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+      currentDocId = data.docId;
+      fileNameSpan.textContent = data.fileName;
+      
+      dropzone.style.display = 'none';
+      fileInfo.style.display = 'flex';
+      
+      // Hide generated questions / answers from any previous document
+      document.getElementById('generatedQuestionsSection').style.display = 'none';
+      document.getElementById('pdfAnswerSection').style.display = 'none';
+      
+      showNotification(`Successfully uploaded ${data.fileName}!`);
+    } catch (err) {
+      console.error(err);
+      statusText.textContent = "Upload failed. Click to retry.";
+      dropzone.style.opacity = "1";
+      showNotification(`Upload error: ${err.message}`);
+    }
+  }
+
+  function clearUploadedPdf(event) {
+    if (event) event.stopPropagation();
+    currentDocId = null;
+    document.getElementById('pdfFileInput').value = '';
+    document.getElementById('pdfDropzone').style.display = 'flex';
+    document.getElementById('pdfDropzone').style.opacity = '1';
+    document.getElementById('uploadStatusText').textContent = "Click to upload PDF";
+    document.getElementById('uploadedFileInfo').style.display = 'none';
+    document.getElementById('generatedQuestionsSection').style.display = 'none';
+    document.getElementById('pdfAnswerSection').style.display = 'none';
+  }
+
+  async function askPdfQuestion() {
+    if (!currentDocId) {
+      showNotification("Please upload a PDF document first!");
+      return;
+    }
+
+    const qInput = document.getElementById('pdfQuestionInput');
+    const question = qInput.value.trim();
+    if (!question) return;
+
+    const askBtn = document.getElementById('askPdfBtn');
+    const answerSection = document.getElementById('pdfAnswerSection');
+    const answerText = document.getElementById('pdfAnswerText');
+    const sourceTextDiv = document.getElementById('pdfSourceText');
+    const sourceSection = document.getElementById('pdfSourceSection');
+    const toggleBtn = document.getElementById('toggleSourceBtn');
+
+    askBtn.disabled = true;
+    askBtn.textContent = "Thinking...";
+    answerSection.style.display = 'block';
+    answerText.textContent = "Analyzing document context and generating answer...";
+    
+    // Reset source text view
+    sourceSection.style.display = 'none';
+    toggleBtn.textContent = "Show Reference Source";
+
+    try {
+      const studentId = getStudentId();
+      const res = await fetch(`${API_BASE}/rag/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId, question, docId: currentDocId })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to get response');
+
+      answerText.textContent = data.answer;
+      sourceTextDiv.textContent = data.sourceText || "No source chunk available.";
+    } catch (err) {
+      console.error(err);
+      answerText.textContent = `⚠️ Error: ${err.message}`;
+    } finally {
+      askBtn.disabled = false;
+      askBtn.textContent = "Ask PDF";
+    }
+  }
+
+  async function generateQuestions() {
+    if (!currentDocId) {
+      showNotification("Please upload a PDF document first!");
+      return;
+    }
+
+    const topicInput = document.getElementById('topicInput');
+    const topic = topicInput.value.trim();
+    if (!topic) {
+      showNotification("Please enter a topic/chapter name!");
+      return;
+    }
+
+    const genBtn = document.getElementById('genQuestionsBtn');
+    const questionsSection = document.getElementById('generatedQuestionsSection');
+    const questionsGrid = document.getElementById('questionsGrid');
+
+    genBtn.disabled = true;
+    genBtn.textContent = "Generating...";
+    questionsSection.style.display = 'flex';
+    questionsGrid.innerHTML = '<span style="color: var(--muted); font-size: 12px; grid-column: 1/-1;">Generating practice questions from the PDF...</span>';
+
+    try {
+      const res = await fetch(`${API_BASE}/rag/generate-questions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ docId: currentDocId, topic, count: 5 })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate questions');
+
+      questionsGrid.innerHTML = '';
+      if (data.questions && data.questions.length > 0) {
+        data.questions.forEach(q => {
+          const card = document.createElement('div');
+          card.style.cssText = `
+            background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+            padding: 12px; font-size: 12px; cursor: pointer; color: var(--text);
+            transition: all 0.2s; min-height: 50px; display: flex; align-items: center;
+          `;
+          card.textContent = q;
+          card.onclick = () => {
+            document.getElementById('pdfQuestionInput').value = q;
+            askPdfQuestion();
+          };
+          card.onmouseover = () => {
+            card.style.borderColor = 'var(--accent)';
+            card.style.background = 'rgba(108, 99, 255, 0.05)';
+          };
+          card.onmouseout = () => {
+            card.style.borderColor = 'var(--border)';
+            card.style.background = 'var(--card)';
+          };
+          questionsGrid.appendChild(card);
+        });
+      } else {
+        questionsGrid.innerHTML = '<span style="color: var(--muted); font-size: 12px; grid-column: 1/-1;">No questions could be generated.</span>';
+      }
+    } catch (err) {
+      console.error(err);
+      questionsGrid.innerHTML = `<span style="color: var(--red); font-size: 12px; grid-column: 1/-1;">⚠️ Error: ${err.message}</span>`;
+    } finally {
+      genBtn.disabled = false;
+      genBtn.textContent = "Generate 5 Questions";
+    }
+  }
+
+  function toggleSourceText() {
+    const sourceSection = document.getElementById('pdfSourceSection');
+    const toggleBtn = document.getElementById('toggleSourceBtn');
+    if (sourceSection.style.display === 'none') {
+      sourceSection.style.display = 'block';
+      toggleBtn.textContent = "Hide Reference Source";
+    } else {
+      sourceSection.style.display = 'none';
+      toggleBtn.textContent = "Show Reference Source";
+    }
+  }
+
+  let comparisonChartInstance = null;
+
+  async function loadExamComparison(studentId, courseName = "") {
+    const dashboard = document.getElementById('examComparisonDashboard');
+    if (!dashboard) return;
+    
+    // If no courseName is provided, find the first course in the student's program
+    if (!courseName) {
+      const programCoursesList = document.getElementById('programCoursesList');
+      if (programCoursesList && programCoursesList.children.length > 0) {
+        const firstLi = programCoursesList.children[0];
+        if (firstLi && firstLi.textContent && firstLi.textContent !== "Loading..." && firstLi.textContent !== "No courses in program.") {
+          courseName = firstLi.textContent.trim();
+        }
+      }
+    }
+    
+    if (!courseName) {
+      dashboard.style.display = 'none';
+      return;
+    }
+    
+    try {
+      const res = await fetch(`${API_BASE}/result-agent/exam-comparison?studentId=${studentId}&courseName=${encodeURIComponent(courseName)}`);
+      if (!res.ok) throw new Error('Failed to load comparison');
+      const data = await res.json();
+      
+      if (data.message || data.error) {
+        dashboard.style.display = 'none';
+        return;
+      }
+      
+      dashboard.style.display = 'flex';
+      const courseNameHeader = document.getElementById('examCompCourseName');
+      if (courseNameHeader) {
+        courseNameHeader.textContent = data.course;
+      }
+      
+      // Render Summary Cards
+      const cardsContainer = document.getElementById('comparisonSummaryCards');
+      if (cardsContainer) {
+        let cardsHtml = '';
+        (data.exams || []).forEach((ex) => {
+          const displayName = ex.examName.replace(data.course, '').trim();
+          cardsHtml += `
+            <div class="feature-card" style="padding: 16px; text-align: center; flex: 1; min-width: 120px;">
+              <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">${displayName}</div>
+              <div style="font-size: 24px; font-weight: 700; color: var(--text); margin-top: 4px;">${ex.percentage}%</div>
+            </div>
+          `;
+        });
+        
+        cardsHtml += `
+          <div class="feature-card" style="padding: 16px; text-align: center; flex: 1; min-width: 120px;">
+            <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Average</div>
+            <div style="font-size: 24px; font-weight: 700; color: var(--text); margin-top: 4px;">${data.averagePercentage}%</div>
+          </div>
+          <div class="feature-card" style="padding: 16px; text-align: center; flex: 1; min-width: 120px;">
+            <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Trend</div>
+            <div style="font-size: 20px; font-weight: 700; color: ${data.improvement.trend === 'Improving' ? 'var(--green)' : 'var(--red)'}; margin-top: 8px;">
+              ${data.improvement.trend === 'Improving' ? '↗️ ' : (data.improvement.trend === 'Declining' ? '↘️ ' : '➖ ')}${data.improvement.trend}
+            </div>
+          </div>
+        `;
+        cardsContainer.innerHTML = cardsHtml;
+      }
+
+      renderComparisonChartsAndTrends(data);
+      
+    } catch (e) {
+      console.error(e);
+      dashboard.style.display = 'none';
+    }
+  }
+
+  function renderComparisonChartsAndTrends(data) {
+    // 1. Render Grouped Bar Chart (comparisonChart)
+    const ctx = document.getElementById('comparisonChart');
+    if (ctx) {
+      if (comparisonChartInstance) {
+        comparisonChartInstance.destroy();
+      }
+      
+      const examLabels = data.exams.map(e => e.examName);
+      const datasets = (data.topicTrend || []).map((t, idx) => {
+        const colors = [
+          '#6c63ff', '#34d399', '#f87171', '#fbbf24', '#a78bfa', '#60a5fa'
+        ];
+        const color = colors[idx % colors.length];
+        return {
+          label: t.topic,
+          data: t.values,
+          backgroundColor: color,
+          borderRadius: 4
+        };
+      });
+      
+      comparisonChartInstance = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: examLabels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              grid: { color: 'var(--border)' }
+            },
+            x: {
+              grid: { display: false }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { boxWidth: 12, padding: 15 }
+            }
+          }
+        }
+      });
+    }
+    
+    // 2. Render Topic Trend Table (trendTableHeader and trendTableBody)
+    const header = document.getElementById('trendTableHeader');
+    const body = document.getElementById('trendTableBody');
+    if (header && body) {
+      let headerHtml = '<tr><th>Topic</th>';
+      (data.exams || []).forEach(e => {
+        const displayName = e.examName.replace(data.course, '').trim();
+        headerHtml += `<th>${displayName}</th>`;
+      });
+      headerHtml += '<th>Trend</th></tr>';
+      header.innerHTML = headerHtml;
+      
+      let bodyHtml = '';
+      if (!data.topicTrend || data.topicTrend.length === 0) {
+        bodyHtml = `<tr><td colspan="${(data.exams || []).length + 2}" style="text-align:center; color:var(--muted); padding: 12px;">No topic trends available.</td></tr>`;
+      } else {
+        data.topicTrend.forEach(t => {
+          bodyHtml += `<tr><td>${t.topic}</td>`;
+          t.values.forEach(v => {
+            bodyHtml += `<td>${v}%</td>`;
+          });
+          const colorClass = t.trend === 'Improving' ? 'Good' : t.trend === 'Declining' ? 'Critical' : 'Average';
+          bodyHtml += `<td><span class="badge ${colorClass}">${t.trend}</span></td></tr>`;
+        });
+      }
+      body.innerHTML = bodyHtml;
+    }
+  }
+
   // Load initial dashboard on startup
   window.onload = loadDashboard;
+
+  function generateStudyPlan() {
+    const input = document.getElementById('msgInput');
+    input.value = "Give me a study plan";
+    sendMessage();
+  }
+
+  function showTimetable() {
+    const input = document.getElementById('msgInput');
+    input.value = "Show my exam timetable";
+    sendMessage();
+  }
 </script>
 </body>
 </html>

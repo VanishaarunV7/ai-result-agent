@@ -11,4 +11,4 @@ const studentExamAttemptSchema = new mongoose.Schema({
   percentage: Number,
   submittedAt: String
 });
-module.exports = mongoose.model('StudentExamAttempt', studentExamAttemptSchema);
+module.exports = mongoose.models.StudentExamAttempt || mongoose.model('StudentExamAttempt', studentExamAttemptSchema);
